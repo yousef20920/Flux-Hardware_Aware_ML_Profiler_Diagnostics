@@ -85,3 +85,82 @@ Build the React-based timeline viewer that parses JSON traces and visualizes CPU
 ### Phase 4: CI/CD Automation
 
 Containerize the application via Docker and provide a sample Jenkins pipeline script to demonstrate automated performance regression testing.
+
+## Commands Used So Far
+
+### Environment and package setup
+
+```bash
+python3 -m pip install -e .
+```
+
+### C++ extension sanity checks
+
+```bash
+python3 - <<'PY'
+import flux._C as c
+c.flux_start()
+c.flux_stop()
+print(c.flux_get_records())
+PY
+```
+
+```bash
+python3 - <<'PY'
+import flux._C as c
+import torch
+
+x = torch.randn(32, 32)
+y = torch.randn(32, 32)
+
+c.flux_start()
+_ = torch.relu(torch.mm(x, y))
+c.flux_stop()
+
+records = c.flux_get_records()
+print('count', len(records))
+print(records[:2])
+PY
+```
+
+### CLI help checks
+
+```bash
+flux --help
+python3 -m flux --help
+```
+
+### Profiling and analysis
+
+```bash
+flux profile --script examples/profile_simple_model.py --output trace.json
+```
+
+```bash
+python3 -m flux profile --script examples/profile_simple_model.py --output trace_module.json
+```
+
+```bash
+flux analyze --trace trace.json
+```
+
+```bash
+flux analyze --trace trace_module.json --baseline trace.json --threshold 5
+```
+
+### Dashboard install and build
+
+```bash
+cd dashboard && npm install
+cd dashboard && npm run build
+```
+
+### Local dashboard serving
+
+```bash
+flux serve --trace trace.json --port 8080
+```
+
+```bash
+flux serve --trace trace.json --port 8099
+```

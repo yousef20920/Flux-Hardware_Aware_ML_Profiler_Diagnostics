@@ -15,6 +15,9 @@ dist/
 *.o
 *.obj
 
+# Node
+node_modules/
+
 # Virtual environments
 .venv/
 venv/

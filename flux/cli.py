@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import mimetypes
 import runpy
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
+from urllib.parse import unquote, urlparse
 
 from .aggregator import aggregate_records
 from .analyzer import analyze_records
@@ -152,45 +154,112 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
     return 1
 
 
-def _build_trace_server(trace_path: Path, port: int) -> HTTPServer:
-    trace_bytes = trace_path.read_bytes()
-    trace_name = trace_path.name
+def _dashboard_dist_dir() -> Path:
+    project_root = Path(__file__).resolve().parent.parent
+    return project_root / "dashboard" / "dist"
 
-    class TraceHandler(BaseHTTPRequestHandler):
-        def do_GET(self) -> None:  # noqa: N802
-            if self.path in ("/", "/index.html"):
-                body = f"""<!doctype html>
+
+def _fallback_index_html(trace_name: str, dashboard_dist: Path) -> bytes:
+    body = f"""<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <title>Flux Trace Server</title>
     <style>
-      body {{ font-family: sans-serif; margin: 2rem; }}
-      code {{ background: #f5f5f5; padding: 0.1rem 0.3rem; }}
+      body {{
+        font-family: sans-serif;
+        margin: 2rem;
+        line-height: 1.4;
+      }}
+      code {{
+        background: #f5f5f5;
+        padding: 0.15rem 0.35rem;
+        border-radius: 0.3rem;
+      }}
     </style>
   </head>
   <body>
     <h1>Flux Trace Server</h1>
     <p>Trace file: <code>{trace_name}</code></p>
     <p>Direct JSON URL: <a href="/trace.json">/trace.json</a></p>
-    <p>This endpoint can be used by the dashboard app.</p>
+    <p>Dashboard build not found at <code>{dashboard_dist}</code>.</p>
+    <p>Build it with:</p>
+    <pre><code>cd dashboard
+npm install
+npm run build</code></pre>
+    <p>Then run <code>flux serve --trace ...</code> again.</p>
   </body>
 </html>
 """
-                body_bytes = body.encode("utf-8")
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.send_header("Content-Length", str(len(body_bytes)))
-                self.end_headers()
-                self.wfile.write(body_bytes)
-                return
+    return body.encode("utf-8")
 
+
+def _safe_static_path(dist_dir: Path, request_path: str) -> Path | None:
+    normalized = urlparse(request_path).path
+    relative = unquote(normalized.lstrip("/"))
+    if not relative or relative == ".":
+        relative = "index.html"
+    candidate = (dist_dir / relative).resolve()
+    try:
+        candidate.relative_to(dist_dir.resolve())
+    except ValueError:
+        return None
+    return candidate
+
+
+def _build_trace_server(trace_path: Path, port: int) -> HTTPServer:
+    trace_bytes = trace_path.read_bytes()
+    trace_name = trace_path.name
+    dist_dir = _dashboard_dist_dir()
+    dist_exists = dist_dir.exists()
+
+    class TraceHandler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802
             if self.path == "/trace.json":
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Content-Length", str(len(trace_bytes)))
                 self.end_headers()
                 self.wfile.write(trace_bytes)
+                return
+
+            if dist_exists:
+                requested = _safe_static_path(dist_dir, self.path)
+                if requested is None:
+                    self.send_response(400)
+                    self.end_headers()
+                    return
+
+                if requested.exists() and requested.is_file():
+                    content_type, _ = mimetypes.guess_type(str(requested))
+                    data = requested.read_bytes()
+                    self.send_response(200)
+                    self.send_header(
+                        "Content-Type", (content_type or "application/octet-stream")
+                    )
+                    self.send_header("Content-Length", str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+
+                # SPA fallback for client-side routes.
+                index_file = dist_dir / "index.html"
+                if index_file.exists():
+                    data = index_file.read_bytes()
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+
+            if self.path in ("/", "/index.html"):
+                body = _fallback_index_html(trace_name, dist_dir)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
                 return
 
             self.send_response(404)
@@ -208,7 +277,12 @@ def _cmd_serve(args: argparse.Namespace) -> int:
         raise FileNotFoundError(f"Trace file not found: {trace_path}")
 
     server = _build_trace_server(trace_path, args.port)
-    print(f"Serving {trace_path} on http://127.0.0.1:{args.port}")
+    dashboard_dist = _dashboard_dist_dir()
+    if dashboard_dist.exists():
+        print(f"Serving dashboard from {dashboard_dist} with trace {trace_path}")
+    else:
+        print(f"Serving trace only (dashboard build missing at {dashboard_dist})")
+    print(f"URL: http://127.0.0.1:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
