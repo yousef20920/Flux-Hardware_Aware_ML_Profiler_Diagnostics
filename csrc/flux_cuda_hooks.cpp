@@ -146,29 +146,47 @@ double record_end_elapsed_us(CudaEventPair* pair) {
   auto end_event = to_event(pair->end_event);
   auto stream = to_stream(pair->stream_ptr);
 
-  auto err = cudaEventRecord(end_event, stream);
-  if (!is_success(err)) {
-    log_cuda_error("cudaEventRecord(end)", err, resolved_device);
-    reset_pair(pair);
-    return -1.0;
-  }
-  err = cudaEventSynchronize(end_event);
-  if (!is_success(err)) {
-    log_cuda_error("cudaEventSynchronize(end)", err, resolved_device);
-    reset_pair(pair);
-    return -1.0;
-  }
+  auto measure_elapsed = [&](const char* stage_prefix, bool with_device_sync) -> double {
+    cudaError_t err = cudaSuccess;
+    if (with_device_sync) {
+      err = cudaDeviceSynchronize();
+      if (!is_success(err)) {
+        log_cuda_error("cudaDeviceSynchronize(fallback)", err, resolved_device);
+        return -1.0;
+      }
+    }
 
-  float elapsed_ms = 0.0f;
-  err = cudaEventElapsedTime(&elapsed_ms, start_event, end_event);
-  if (!is_success(err)) {
-    log_cuda_error("cudaEventElapsedTime", err, resolved_device);
-    reset_pair(pair);
-    return -1.0;
+    err = cudaEventRecord(end_event, stream);
+    if (!is_success(err)) {
+      log_cuda_error(stage_prefix, err, resolved_device);
+      return -1.0;
+    }
+
+    err = cudaEventSynchronize(end_event);
+    if (!is_success(err)) {
+      log_cuda_error("cudaEventSynchronize(end)", err, resolved_device);
+      return -1.0;
+    }
+
+    float elapsed_ms = 0.0f;
+    err = cudaEventElapsedTime(&elapsed_ms, start_event, end_event);
+    if (!is_success(err)) {
+      log_cuda_error("cudaEventElapsedTime", err, resolved_device);
+      return -1.0;
+    }
+    return static_cast<double>(elapsed_ms) * 1000.0;
+  };
+
+  // Fast path: measure directly on the captured stream.
+  double elapsed_us = measure_elapsed("cudaEventRecord(end)", false);
+  // If elapsed is non-positive, fallback to device sync to account for work
+  // launched on other streams before recording end.
+  if (elapsed_us <= 0.0) {
+    elapsed_us = measure_elapsed("cudaEventRecord(end,fallback)", true);
   }
 
   reset_pair(pair);
-  return static_cast<double>(elapsed_ms) * 1000.0;
+  return elapsed_us;
 }
 
 #else
