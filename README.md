@@ -6,11 +6,9 @@ Flux is a local-first ML profiler that captures low-level PyTorch operation timi
 
 Overview:
 
-![Flux Dashboard Overview](docs/images/dashboard-overview.png)
-
-Timeline + inspector:
-
 ![Flux Dashboard Timeline](docs/images/dashboard-timeline.png)
+
+![Flux Dashboard Overview](docs/images/dashboard-overview.png)
 
 ## Why Flux
 
