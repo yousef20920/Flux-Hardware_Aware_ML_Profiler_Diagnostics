@@ -2,6 +2,9 @@ import torch
 
 
 def main() -> None:
+    torch.manual_seed(0)
+    torch.set_num_threads(1)
+
     model = torch.nn.Sequential(
         torch.nn.Linear(512, 1024),
         torch.nn.ReLU(),

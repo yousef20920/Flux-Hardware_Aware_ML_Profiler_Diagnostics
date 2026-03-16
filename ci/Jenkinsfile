@@ -1,0 +1,75 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  environment {
+    THRESHOLD = '5'
+    CURRENT_TRACE = 'trace-current.json'
+    BASELINE_TRACE = 'trace-baseline.json'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install Flux') {
+      steps {
+        sh '''
+          python3 -m pip install -e .
+        '''
+      }
+    }
+
+    stage('Build Dashboard') {
+      steps {
+        sh '''
+          cd dashboard
+          npm ci
+          npm run build
+        '''
+      }
+    }
+
+    stage('Profile Current') {
+      steps {
+        sh '''
+          flux profile --script examples/profile_simple_model.py --output "$CURRENT_TRACE"
+        '''
+      }
+    }
+
+    stage('Prepare Baseline') {
+      steps {
+        sh '''
+          if [ -f ci/baseline/trace-baseline.json ]; then
+            cp ci/baseline/trace-baseline.json "$BASELINE_TRACE"
+          else
+            echo "No checked-in baseline found; generating local baseline for this run."
+            flux profile --script examples/profile_simple_model.py --output "$BASELINE_TRACE"
+          fi
+        '''
+      }
+    }
+
+    stage('Regression Check') {
+      steps {
+        sh '''
+          flux analyze --trace "$CURRENT_TRACE" --baseline "$BASELINE_TRACE" --threshold "$THRESHOLD"
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'trace-*.json', fingerprint: true
+    }
+  }
+}

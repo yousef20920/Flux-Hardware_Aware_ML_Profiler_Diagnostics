@@ -164,3 +164,15 @@ flux serve --trace trace.json --port 8080
 ```bash
 flux serve --trace trace.json --port 8099
 ```
+
+### CI/CD automation commands
+
+```bash
+docker build -f ci/Dockerfile -t flux-profiler:local .
+```
+
+```bash
+flux profile --script examples/profile_simple_model.py --output trace-current.json
+flux profile --script examples/profile_simple_model.py --output trace-baseline.json
+flux analyze --trace trace-current.json --baseline trace-baseline.json --threshold 5
+```
