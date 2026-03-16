@@ -51,6 +51,7 @@ def export_trace(
     output_path: str,
     summary: Optional[Dict[str, Any]] = None,
     metadata: Optional[Dict[str, Any]] = None,
+    compact_json: bool = True,
 ) -> Dict[str, Any]:
     payload: Dict[str, Any] = {"traceEvents": records_to_trace_events(records)}
     if summary:
@@ -60,5 +61,9 @@ def export_trace(
 
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    if compact_json:
+        json_text = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    else:
+        json_text = json.dumps(payload, indent=2)
+    path.write_text(json_text, encoding="utf-8")
     return payload

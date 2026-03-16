@@ -177,6 +177,7 @@ def _cmd_profile(args: argparse.Namespace) -> int:
         args.output,
         summary={**aggregate, "classification": analyzed["summary"], "gpu": gpu_summary},
         metadata={"timing_mode": args.timing_mode},
+        compact_json=(args.json_format == "compact"),
     )
 
     print(
@@ -602,6 +603,12 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["auto", "cpu", "cuda"],
         default="auto",
         help="Timing mode for profiling (auto, cpu, cuda)",
+    )
+    profile.add_argument(
+        "--json-format",
+        choices=["compact", "pretty"],
+        default="compact",
+        help="Trace JSON formatting mode (default: compact)",
     )
     profile.add_argument("script_args", nargs=argparse.REMAINDER)
     profile.set_defaults(func=_cmd_profile)

@@ -113,12 +113,15 @@ Options:
 - `--peak-flops-tflops` (default `10.0`)
 - `--memory-bandwidth-gbps` (default `300.0`)
 - `--timing-mode auto|cpu|cuda` (default `auto`)
+- `--json-format compact|pretty` (default `compact`)
 
 Timing mode notes:
 
 - `auto`: capture CUDA timing when CUDA support is available, otherwise CPU timing
 - `cpu`: force host-side timing only
 - `cuda`: require CUDA timing support, otherwise command exits with an error
+- `compact`: minified JSON output for smaller files and faster loading
+- `pretty`: human-readable JSON (larger files)
 
 ### `flux analyze`
 
