@@ -1,175 +1,125 @@
-# Flux: Hardware-Aware ML Profiler & Diagnostics
+# Flux
 
-## The Real-World Problem: The ML Compute Crisis
+Flux is a local-first ML profiler that captures low-level PyTorch operation timing, exports Chrome Trace JSON, and provides a timeline dashboard for debugging performance bottlenecks.
 
-The ML industry is facing a massive hardware shortage and soaring cloud costs. Startups and researchers are renting expensive GPUs to train and run deep learning models, but the vast majority of these workloads are highly inefficient.
+## Project Status
 
-Most ML developers write Python code (PyTorch/TensorFlow) and have no visibility into what the underlying hardware is actually doing. Because of this, GPUs often sit idle waiting for data (memory-bound) or get bogged down by unoptimized operations. Developers are paying for 100% of a GPU but only utilizing 30% of its potential.
+- Active development
+- CPU profiling path is implemented and usable today
+- Dashboard + CI regression checks are implemented
+- CUDA timing and GPU diagnostics are planned next (see [PLAN.md](./PLAN.md))
 
-Current observability tools tell developers when an API is slow, but they don't tell them why the hardware is struggling or how to fix it.
+## Why Flux
 
-## The Solution
+Most ML performance issues are not visible from high-level model code alone. Flux helps you:
 
-Flux is an open-source, local-first diagnostics framework. It bridges the gap between high-level Python ML code and low-level hardware execution.
+- Capture op-level timing from PyTorch internals
+- Detect idle gaps and poor hardware utilization
+- Compare traces in CI and fail builds on regressions
+- Visualize execution with an interactive local dashboard
 
-By instrumenting deep learning models at the C++ and CUDA level, Flux analyzes exactly how operations are mapped to the GPU. It identifies memory bottlenecks, visualizes kernel execution times, and provides actionable recommendations to maximize hardware utilization, saving developers thousands of dollars in cloud compute costs.
+## Features
 
-## Why Open Source and Local?
+- C++/PyTorch instrumentation via `RecordFunction`
+- Python profiler context manager (`FluxProfiler`)
+- Trace export in Chrome Trace Event format
+- CLI workflow for profile, analyze, and serve
+- React dashboard with zoomable timeline and event inspector
+- CI templates for GitHub Actions and Jenkins
 
-Flux is designed as a local CLI tool and open-source library.
+## Requirements
 
-Profiling requires direct access to hardware drivers, and companies will not expose their proprietary model architectures to third-party SaaS websites. Flux runs securely inside the user's own environment (or Docker container), processes the hardware metrics, and serves a visualization dashboard entirely on `localhost`.
+- Python 3.9+
+- Node.js 20+ and npm (for dashboard build)
+- PyTorch (installed automatically via `pip install -e .`)
 
-## Core Features
+## Quickstart
 
-### 1. The "Memory Wall" Analyzer
-
-Deep learning inference is frequently constrained by memory bandwidth, not compute power.
-
-- Tracks Host-to-Device (CPU to GPU) transfers and VRAM bandwidth.
-- Automatically flags operations as memory-bound vs. compute-bound.
-- Alerts developers when batch size is too small to saturate GPU cores.
-
-### 2. Surgical Kernel-Level Tracing
-
-Instead of wrapping network requests, Flux hooks directly into the underlying deep learning libraries (`cuBLAS`, `cuDNN`).
-
-- Measures microsecond latency of individual operations (for example, matrix multiplications and convolutions).
-- Identifies inefficient custom layers that should be fused.
-
-### 3. CI/CD Performance Guardrails (Regression Testing)
-
-Flux integrates directly into modern infrastructure pipelines (Jenkins, GitHub Actions).
-
-- Add Flux to Dockerized test suites.
-- If a new PR introduces unoptimized code that degrades GPU kernel execution time by more than 5%, the CI pipeline can fail automatically before production.
-
-### 4. Interactive Timeline Dashboard
-
-Flux translates raw hardware metrics into Chrome Trace Event JSON.
-
-- Runs a lightweight local web UI with a Gantt-chart timeline.
-- Lets developers visualize CPU data-prep streams alongside GPU execution streams to spot idle hardware time.
-
-## Technical Architecture and Stack
-
-Flux is built on a high-performance, systems-level stack:
-
-- **Core instrumentation (backend):** C++, CUDA, Python  
-  Requires low-level interfacing with PyTorch's C++ backend and GPU profiling APIs to capture microsecond-level hardware events with minimal overhead.
-- **Deep learning interoperability:** PyTorch, NumPy
-- **Infrastructure and containerization:** Docker, Linux/Bash, Jenkins (for CI/CD testing)
-- **Visualization (frontend):** JavaScript (React or Vue), HTML/CSS  
-  Used to render large JSON trace payloads into an interactive local timeline.
-
-## Target Audience
-
-- Machine learning engineers optimizing local inference for custom models.
-- Systems software engineers building custom CUDA extensions who need to verify optimizations.
-- Startups looking to reduce AWS/GCP cloud compute bills by maximizing hardware utilization.
-
-## Development Roadmap (MVP)
-
-### Phase 1: C++ Profiling Hooks
-
-Build a PyTorch C++ extension that logs underlying execution times for basic operations (`Linear`, `ReLU`).
-
-### Phase 2: Data Aggregation and Export
-
-Write the Python layer that aggregates profiling data, calculates memory bandwidth, and exports structured JSON trace files.
-
-### Phase 3: Local Dashboard
-
-Build the React-based timeline viewer that parses JSON traces and visualizes CPU/GPU execution overlap.
-
-### Phase 4: CI/CD Automation
-
-Containerize the application via Docker and provide a sample Jenkins pipeline script to demonstrate automated performance regression testing.
-
-## Commands Used So Far
-
-### Environment and package setup
+### 1) Install
 
 ```bash
 python3 -m pip install -e .
 ```
 
-### C++ extension sanity checks
-
-```bash
-python3 - <<'PY'
-import flux._C as c
-c.flux_start()
-c.flux_stop()
-print(c.flux_get_records())
-PY
-```
-
-```bash
-python3 - <<'PY'
-import flux._C as c
-import torch
-
-x = torch.randn(32, 32)
-y = torch.randn(32, 32)
-
-c.flux_start()
-_ = torch.relu(torch.mm(x, y))
-c.flux_stop()
-
-records = c.flux_get_records()
-print('count', len(records))
-print(records[:2])
-PY
-```
-
-### CLI help checks
-
-```bash
-flux --help
-python3 -m flux --help
-```
-
-### Profiling and analysis
+### 2) Create a trace
 
 ```bash
 flux profile --script examples/profile_simple_model.py --output trace.json
 ```
 
-```bash
-python3 -m flux profile --script examples/profile_simple_model.py --output trace_module.json
-```
+### 3) Analyze the trace
 
 ```bash
 flux analyze --trace trace.json
 ```
 
-```bash
-flux analyze --trace trace_module.json --baseline trace.json --threshold 5
-```
-
-### Dashboard install and build
+### 4) Build and open dashboard
 
 ```bash
-cd dashboard && npm install
-cd dashboard && npm run build
-```
-
-### Local dashboard serving
-
-```bash
+cd dashboard
+npm install
+npm run build
+cd ..
 flux serve --trace trace.json --port 8080
 ```
 
+Open `http://127.0.0.1:8080`.
+
+## CLI Reference
+
+### `flux profile`
+
+Run a Python script under Flux profiling and write a trace JSON.
+
 ```bash
-flux serve --trace trace.json --port 8099
+flux profile --script <script.py> --output <trace.json>
 ```
 
-### CI/CD automation commands
+Options:
+
+- `--peak-flops-tflops` (default `10.0`)
+- `--memory-bandwidth-gbps` (default `300.0`)
+
+### `flux analyze`
+
+Analyze a trace and optionally compare against a baseline.
 
 ```bash
-docker build -f ci/Dockerfile -t flux-profiler:local .
+flux analyze --trace <trace.json>
 ```
+
+```bash
+flux analyze --trace <current.json> --baseline <baseline.json> --threshold 5
+```
+
+Returns non-zero when regression exceeds threshold.
+
+### `flux serve`
+
+Serve the dashboard and expose `/trace.json`.
+
+```bash
+flux serve --trace <trace.json> --port 8080
+```
+
+If `dashboard/dist` is missing, Flux serves a fallback page with build instructions.
+
+## CI/CD Regression Flow
+
+This repository includes:
+
+- GitHub Actions workflow: `.github/workflows/perf-regression.yml`
+- Jenkins pipeline: `ci/Jenkinsfile`
+- Dockerfile: `ci/Dockerfile`
+
+Default CI behavior uses an **ephemeral baseline** generated in the same run for stability across machines.
+
+Baseline mode:
+
+- `ephemeral` (default): generate baseline in current run
+- `checked-in`: use `ci/baseline/trace-baseline.json`
+
+Example local regression run:
 
 ```bash
 flux profile --script examples/profile_simple_model.py --output trace-current.json
@@ -177,9 +127,60 @@ flux profile --script examples/profile_simple_model.py --output trace-baseline.j
 flux analyze --trace trace-current.json --baseline trace-baseline.json --threshold 5
 ```
 
-```bash
-# CI baseline mode:
-# - ephemeral (default): generate baseline in the same run
-# - checked-in: use ci/baseline/trace-baseline.json
-BASELINE_MODE=checked-in flux analyze --trace trace-current.json --baseline ci/baseline/trace-baseline.json --threshold 5
+## Repository Layout
+
+```text
+flux/                       Python package (profiler, analyzer, CLI)
+csrc/                       C++ extension hooks
+dashboard/                  React/Vite UI
+ci/                         Dockerfile + Jenkins pipeline + baseline assets
+.github/workflows/          GitHub Actions workflows
+examples/                   Example scripts
+PLAN.md                     Implementation roadmap
 ```
+
+## Development
+
+Install backend + frontend dependencies:
+
+```bash
+python3 -m pip install -e .
+cd dashboard && npm ci
+```
+
+Build dashboard assets:
+
+```bash
+cd dashboard && npm run build
+```
+
+Useful checks:
+
+```bash
+flux --help
+python3 -m flux --help
+```
+
+## Known Limitations
+
+- Current timing implementation is CPU-side (`std::chrono`) for broad compatibility
+- CUDA event timing and deeper GPU metrics are not merged yet
+- Regression checks can still vary slightly between environments
+
+## Roadmap
+
+See [PLAN.md](./PLAN.md) for current phase-by-phase implementation plan, including upcoming CUDA/GPU phases.
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+For performance-related contributions, include:
+
+- Reproduction steps
+- Sample trace (`trace.json`) when possible
+- Before/after `flux analyze` output
+
+## License
+
+A license file has not been added yet. Add `LICENSE` before public release.
