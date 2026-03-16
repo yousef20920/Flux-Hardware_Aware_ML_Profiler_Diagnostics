@@ -182,6 +182,15 @@ def _cmd_profile(args: argparse.Namespace) -> int:
         f"Wrote trace with {len(payload['traceEvents'])} events: {args.output} "
         f"(timing_mode={args.timing_mode})"
     )
+    if args.timing_mode == "cuda":
+        cuda_records = [item for item in records if bool(item.get("is_cuda", False))]
+        positive_cuda_elapsed = sum(
+            1 for item in cuda_records if float(item.get("cuda_elapsed_us", -1.0)) > 0.0
+        )
+        if cuda_records and positive_cuda_elapsed == 0:
+            print(
+                "Warning: CUDA timing mode is enabled, but no positive cuda_elapsed_us values were captured."
+            )
     _print_aggregate(aggregate)
     _print_gpu_diagnostics(gpu_summary)
     return 0

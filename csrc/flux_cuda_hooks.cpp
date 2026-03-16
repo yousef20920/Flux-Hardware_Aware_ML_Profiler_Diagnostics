@@ -2,8 +2,9 @@
 
 #if defined(__has_include)
 #if __has_include(<cuda_runtime_api.h>) && __has_include(<c10/cuda/CUDAFunctions.h>) && \
-    __has_include(<c10/cuda/CUDAStream.h>)
+    __has_include(<c10/cuda/CUDAStream.h>) && __has_include(<c10/cuda/CUDAGuard.h>)
 #define FLUX_HAS_CUDA_TIMING 1
+#include <c10/cuda/CUDAGuard.h>
 #include <c10/cuda/CUDAFunctions.h>
 #include <c10/cuda/CUDAStream.h>
 #include <cuda_runtime_api.h>
@@ -73,6 +74,8 @@ bool record_start(CudaEventPair* pair, int device_id) {
   reset_pair(pair);
 
   int resolved_device = device_id >= 0 ? device_id : c10::cuda::current_device();
+  // Ensure event lifecycle and stream operations execute on the intended device.
+  c10::cuda::CUDAGuard device_guard(resolved_device);
   auto stream = c10::cuda::getCurrentCUDAStream(resolved_device).stream();
   cudaEvent_t start_event = nullptr;
   cudaEvent_t end_event = nullptr;
@@ -108,6 +111,9 @@ double record_end_elapsed_us(CudaEventPair* pair) {
     return -1.0;
   }
 
+  int resolved_device = pair->device_id >= 0 ? pair->device_id : c10::cuda::current_device();
+  // Re-enter the same device context before recording/syncing the end event.
+  c10::cuda::CUDAGuard device_guard(resolved_device);
   auto start_event = to_event(pair->start_event);
   auto end_event = to_event(pair->end_event);
   auto stream = to_stream(pair->stream_ptr);
