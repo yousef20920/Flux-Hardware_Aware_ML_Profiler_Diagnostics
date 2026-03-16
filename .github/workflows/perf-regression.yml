@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       THRESHOLD: "5"
+      MIN_BASELINE_US: "25"
+      MIN_REGRESSION_DELTA_US: "3"
       BASELINE_MODE: ephemeral
       CURRENT_TRACE: trace-current.json
       BASELINE_TRACE: trace-baseline.json
@@ -45,6 +47,8 @@ jobs:
 
       - name: Profile current
         run: |
+          # Prime one profiling run to reduce startup/warmup skew.
+          flux profile --script examples/profile_simple_model.py --output trace-warmup.json
           flux profile --script examples/profile_simple_model.py --output "$CURRENT_TRACE"
 
       - name: Prepare baseline
@@ -59,7 +63,12 @@ jobs:
 
       - name: Regression check
         run: |
-          flux analyze --trace "$CURRENT_TRACE" --baseline "$BASELINE_TRACE" --threshold "$THRESHOLD"
+          flux analyze \
+            --trace "$CURRENT_TRACE" \
+            --baseline "$BASELINE_TRACE" \
+            --threshold "$THRESHOLD" \
+            --min-baseline-us "$MIN_BASELINE_US" \
+            --min-regression-delta-us "$MIN_REGRESSION_DELTA_US"
 
       - name: Upload traces
         if: always()
@@ -67,5 +76,6 @@ jobs:
         with:
           name: flux-traces
           path: |
+            trace-warmup.json
             trace-current.json
             trace-baseline.json

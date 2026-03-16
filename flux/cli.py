@@ -101,10 +101,15 @@ def _cmd_profile(args: argparse.Namespace) -> int:
 
 
 def _regression_report(
-    current_means: Dict[str, float], baseline_means: Dict[str, float], threshold_pct: float
-) -> Tuple[List[Tuple[str, float, float, float]], List[str]]:
-    regressions: List[Tuple[str, float, float, float]] = []
+    current_means: Dict[str, float],
+    baseline_means: Dict[str, float],
+    threshold_pct: float,
+    min_baseline_us: float = 0.0,
+    min_regression_delta_us: float = 0.0,
+) -> Tuple[List[Tuple[str, float, float, float, float]], List[str], List[str]]:
+    regressions: List[Tuple[str, float, float, float, float]] = []
     missing_in_baseline: List[str] = []
+    skipped_small_baseline: List[str] = []
 
     for op_name, current in current_means.items():
         baseline = baseline_means.get(op_name)
@@ -113,12 +118,18 @@ def _regression_report(
             continue
         if baseline <= 0:
             continue
+
+        if baseline < min_baseline_us:
+            skipped_small_baseline.append(op_name)
+            continue
+
+        delta_us = current - baseline
         delta_pct = ((current - baseline) / baseline) * 100.0
-        if delta_pct > threshold_pct:
-            regressions.append((op_name, baseline, current, delta_pct))
+        if delta_pct > threshold_pct and delta_us > min_regression_delta_us:
+            regressions.append((op_name, baseline, current, delta_pct, delta_us))
 
     regressions.sort(key=lambda x: x[3], reverse=True)
-    return regressions, sorted(missing_in_baseline)
+    return regressions, sorted(missing_in_baseline), sorted(skipped_small_baseline)
 
 
 def _cmd_analyze(args: argparse.Namespace) -> int:
@@ -133,23 +144,36 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
     baseline_records = _extract_records_from_trace(Path(args.baseline))
     current_means = _op_means(records)
     baseline_means = _op_means(baseline_records)
-    regressions, missing = _regression_report(current_means, baseline_means, args.threshold)
+    regressions, missing, skipped = _regression_report(
+        current_means,
+        baseline_means,
+        args.threshold,
+        min_baseline_us=args.min_baseline_us,
+        min_regression_delta_us=args.min_regression_delta_us,
+    )
 
     print("")
     print(
         f"Regression check vs baseline ({args.baseline}) with threshold {args.threshold:.2f}%:"
     )
+    print(
+        f"  Filters: min_baseline_us={args.min_baseline_us:.2f}, "
+        f"min_regression_delta_us={args.min_regression_delta_us:.2f}"
+    )
     if missing:
         print(f"  Ops missing in baseline: {', '.join(missing[:10])}")
+    if skipped:
+        print(f"  Ops skipped by min_baseline_us: {', '.join(skipped[:10])}")
     if not regressions:
         print("  No regressions detected.")
         return 0
 
     print("  Regressions:")
-    for op_name, baseline, current, delta_pct in regressions:
+    for op_name, baseline, current, delta_pct, delta_us in regressions:
         print(
             f"    {op_name}: baseline={_format_us(baseline)} "
-            f"current={_format_us(current)} delta={delta_pct:.2f}%"
+            f"current={_format_us(current)} delta={delta_pct:.2f}% "
+            f"({delta_us:.2f} us)"
         )
     return 1
 
@@ -322,6 +346,18 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=5.0,
         help="Regression threshold percentage for baseline comparison",
+    )
+    analyze.add_argument(
+        "--min-baseline-us",
+        type=float,
+        default=0.0,
+        help="Ignore ops with baseline mean below this value (microseconds)",
+    )
+    analyze.add_argument(
+        "--min-regression-delta-us",
+        type=float,
+        default=0.0,
+        help="Require this minimum absolute delta (microseconds) to flag a regression",
     )
     analyze.set_defaults(func=_cmd_analyze)
 

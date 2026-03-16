@@ -94,6 +94,11 @@ flux analyze --trace <current.json> --baseline <baseline.json> --threshold 5
 
 Returns non-zero when regression exceeds threshold.
 
+Useful noise guards for CI:
+
+- `--min-baseline-us` ignores very small baseline ops
+- `--min-regression-delta-us` requires a minimum absolute delta
+
 ### `flux serve`
 
 Serve the dashboard and expose `/trace.json`.
@@ -122,9 +127,16 @@ Baseline mode:
 Example local regression run:
 
 ```bash
+# Warmup run helps reduce one-time startup skew.
+flux profile --script examples/profile_simple_model.py --output trace-warmup.json
 flux profile --script examples/profile_simple_model.py --output trace-current.json
 flux profile --script examples/profile_simple_model.py --output trace-baseline.json
-flux analyze --trace trace-current.json --baseline trace-baseline.json --threshold 5
+flux analyze \
+  --trace trace-current.json \
+  --baseline trace-baseline.json \
+  --threshold 5 \
+  --min-baseline-us 25 \
+  --min-regression-delta-us 3
 ```
 
 ## Repository Layout

@@ -8,6 +8,8 @@ pipeline {
 
   environment {
     THRESHOLD = '5'
+    MIN_BASELINE_US = '25'
+    MIN_REGRESSION_DELTA_US = '3'
     BASELINE_MODE = 'ephemeral'
     CURRENT_TRACE = 'trace-current.json'
     BASELINE_TRACE = 'trace-baseline.json'
@@ -41,6 +43,8 @@ pipeline {
     stage('Profile Current') {
       steps {
         sh '''
+          # Prime one profiling run to reduce startup/warmup skew.
+          flux profile --script examples/profile_simple_model.py --output trace-warmup.json
           flux profile --script examples/profile_simple_model.py --output "$CURRENT_TRACE"
         '''
       }
@@ -63,7 +67,12 @@ pipeline {
     stage('Regression Check') {
       steps {
         sh '''
-          flux analyze --trace "$CURRENT_TRACE" --baseline "$BASELINE_TRACE" --threshold "$THRESHOLD"
+          flux analyze \
+            --trace "$CURRENT_TRACE" \
+            --baseline "$BASELINE_TRACE" \
+            --threshold "$THRESHOLD" \
+            --min-baseline-us "$MIN_BASELINE_US" \
+            --min-regression-delta-us "$MIN_REGRESSION_DELTA_US"
         '''
       }
     }
