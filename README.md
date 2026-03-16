@@ -69,6 +69,23 @@ flux profile --timing-mode cuda --script examples/profile_simple_model.py --outp
 flux analyze --trace trace-gpu.json --gpu-ci-mode require
 ```
 
+Validate that CUDA timing is really being captured:
+
+```bash
+python - <<'PY'
+import json
+d=json.load(open("trace-gpu.json"))
+events=[e for e in d.get("traceEvents", []) if e.get("ph")=="X"]
+cuda=[e for e in events if (e.get("args") or {}).get("is_cuda")]
+pos=sum(
+    1
+    for e in cuda
+    if ((e.get("args") or {}).get("cuda_elapsed_us", -1) or -1) > 0
+)
+print("cuda_events", len(cuda), "cuda_elapsed_us>0", pos)
+PY
+```
+
 ### 4) Build and open dashboard
 
 ```bash
@@ -161,9 +178,9 @@ Example local regression run:
 
 ```bash
 # Warmup run helps reduce one-time startup skew.
-flux profile --timing-mode auto --script examples/profile_simple_model.py --output trace-warmup.json
-flux profile --timing-mode auto --script examples/profile_simple_model.py --output trace-current.json
-flux profile --timing-mode auto --script examples/profile_simple_model.py --output trace-baseline.json
+flux profile --timing-mode cuda --script examples/profile_simple_model.py --output trace-warmup.json
+flux profile --timing-mode cuda --script examples/profile_simple_model.py --output trace-current.json
+flux profile --timing-mode cuda --script examples/profile_simple_model.py --output trace-baseline.json
 flux analyze \
   --trace trace-current.json \
   --baseline trace-baseline.json \
@@ -181,6 +198,11 @@ To enforce GPU traces in CI:
 ```bash
 flux analyze --trace trace-current.json --baseline trace-baseline.json --gpu-ci-mode require
 ```
+
+Recommended CUDA CI env settings:
+
+- `TIMING_MODE=cuda`
+- `GPU_CI_MODE=require`
 
 ## Repository Layout
 
