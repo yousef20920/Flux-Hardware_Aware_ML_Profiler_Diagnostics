@@ -98,6 +98,16 @@ flux serve --trace trace.json --port 8080
 
 Open `http://127.0.0.1:8080`.
 
+## Dashboard Screenshots
+
+Overview:
+
+![Flux Dashboard Overview](docs/images/dashboard-overview.png)
+
+Timeline + inspector:
+
+![Flux Dashboard Timeline](docs/images/dashboard-timeline.png)
+
 ## CLI Reference
 
 ### `flux profile`
@@ -114,6 +124,10 @@ Options:
 - `--memory-bandwidth-gbps` (default `300.0`)
 - `--timing-mode auto|cpu|cuda` (default `auto`)
 - `--json-format compact|pretty` (default `compact`)
+- `--start-us <int>` export only events overlapping this start timestamp
+- `--end-us <int>` export only events overlapping this end timestamp
+- `--min-duration-us <float>` drop very short events
+- `--sample-rate <int>` keep every Nth event after filtering
 
 Timing mode notes:
 
@@ -122,6 +136,19 @@ Timing mode notes:
 - `cuda`: require CUDA timing support, otherwise command exits with an error
 - `compact`: minified JSON output for smaller files and faster loading
 - `pretty`: human-readable JSON (larger files)
+
+Large trace example (window + downsample):
+
+```bash
+flux profile \
+  --timing-mode cuda \
+  --script your_model.py \
+  --output trace-ui.json \
+  --start-us 0 \
+  --end-us 120000000 \
+  --min-duration-us 20 \
+  --sample-rate 5
+```
 
 ### `flux analyze`
 
@@ -165,6 +192,7 @@ Dashboard build behavior:
 - By default, Flux uses `--dashboard-build auto` and rebuilds when dashboard source files are newer than `dist`.
 - Use `--dashboard-build always` to force rebuild every run.
 - Use `--dashboard-build never` to skip rebuild.
+- Trace parsing is done in a background Web Worker to keep the UI responsive on large files.
 
 If `dashboard/dist` is missing and build is not available, Flux serves a fallback page with build instructions.
 
@@ -212,6 +240,31 @@ Recommended CUDA CI env settings:
 
 - `TIMING_MODE=cuda`
 - `GPU_CI_MODE=require`
+
+## CLI Example Output
+
+Example `flux profile` output from a large CUDA run:
+
+```text
+Wrote trace with 6360790 events: trace-4000.json (timing_mode=cuda)
+Total ops: 6360790
+Total op duration: 229347984.00 us
+Wall time: 749799164.00 us
+Idle time: 580398380.00 us
+Utilization: 22.59%
+GPU diagnostics:
+  CUDA ops: 6360790
+  CUDA time: 270848722.11 us
+```
+
+Example `flux analyze` output tail:
+
+```text
+CPU regression check vs baseline (trace-baseline.json) with threshold 5.00%:
+  No regressions detected.
+GPU regression check vs baseline (trace-baseline.json) with threshold 5.00%:
+  No regressions detected.
+```
 
 ## Repository Layout
 

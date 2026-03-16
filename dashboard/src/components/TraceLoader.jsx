@@ -1,14 +1,6 @@
 import { useRef, useState } from 'react';
 
-function parseTraceText(text) {
-  const parsed = JSON.parse(text);
-  if (!parsed || !Array.isArray(parsed.traceEvents)) {
-    throw new Error('Trace JSON must contain a traceEvents array.');
-  }
-  return parsed;
-}
-
-export default function TraceLoader({ onLoad, onError }) {
+export default function TraceLoader({ onLoadText, onError }) {
   const inputRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,8 +9,8 @@ export default function TraceLoader({ onLoad, onError }) {
     if (!file) return;
     try {
       setLoading(true);
-      const payload = parseTraceText(await file.text());
-      onLoad(payload, file.name);
+      const traceText = await file.text();
+      onLoadText(traceText, file.name);
     } catch (err) {
       onError(err.message || 'Failed to parse trace file.');
     } finally {
@@ -31,8 +23,7 @@ export default function TraceLoader({ onLoad, onError }) {
       setLoading(true);
       const response = await fetch('/trace.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('Could not fetch /trace.json — run `flux serve --trace trace.json` first.');
-      const payload = parseTraceText(await response.text());
-      onLoad(payload, '/trace.json');
+      onLoadText(await response.text(), '/trace.json');
     } catch (err) {
       onError(err.message || 'Failed to load trace from server.');
     } finally {

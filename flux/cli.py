@@ -157,26 +157,98 @@ def _run_script_under_profiler(
         sys.argv = old_argv
 
 
+def _filter_records_for_export(
+    records: List[Dict[str, Any]],
+    start_us: int | None,
+    end_us: int | None,
+    min_duration_us: float,
+    sample_rate: int,
+) -> Tuple[List[Dict[str, Any]], Dict[str, int | float | None]]:
+    window_filtered: List[Dict[str, Any]] = []
+    dropped_out_of_window = 0
+    dropped_short_duration = 0
+    dropped_by_sampling = 0
+
+    for item in records:
+        start = int(item.get("start_us", 0))
+        end = int(item.get("end_us", start + int(item.get("duration_us", 0))))
+
+        if start_us is not None and end < start_us:
+            dropped_out_of_window += 1
+            continue
+        if end_us is not None and start > end_us:
+            dropped_out_of_window += 1
+            continue
+
+        duration = float(item.get("duration_us", 0))
+        if duration < min_duration_us:
+            dropped_short_duration += 1
+            continue
+
+        window_filtered.append(item)
+
+    sampled: List[Dict[str, Any]] = []
+    for index, item in enumerate(window_filtered):
+        if sample_rate > 1 and (index % sample_rate) != 0:
+            dropped_by_sampling += 1
+            continue
+        sampled.append(item)
+
+    stats: Dict[str, int | float | None] = {
+        "input_records": len(records),
+        "output_records": len(sampled),
+        "dropped_out_of_window": dropped_out_of_window,
+        "dropped_short_duration": dropped_short_duration,
+        "dropped_by_sampling": dropped_by_sampling,
+        "start_us": start_us,
+        "end_us": end_us,
+        "min_duration_us": float(min_duration_us),
+        "sample_rate": sample_rate,
+    }
+    return sampled, stats
+
+
 def _cmd_profile(args: argparse.Namespace) -> int:
+    if args.sample_rate < 1:
+        raise ValueError("--sample-rate must be >= 1.")
+    if args.start_us is not None and args.end_us is not None and args.start_us > args.end_us:
+        raise ValueError("--start-us must be <= --end-us.")
+    if args.min_duration_us < 0:
+        raise ValueError("--min-duration-us must be >= 0.")
+
     records, gpu_memory_telemetry = _run_script_under_profiler(
         Path(args.script), args.script_args, args.timing_mode
     )
-    aggregate = aggregate_records(records)
-    analyzed = analyze_records(
+    filtered_records, filter_stats = _filter_records_for_export(
         records,
+        start_us=args.start_us,
+        end_us=args.end_us,
+        min_duration_us=args.min_duration_us,
+        sample_rate=args.sample_rate,
+    )
+    filtered_aggregate = aggregate_records(filtered_records)
+    analyzed = analyze_records(
+        filtered_records,
         peak_flops_tflops=args.peak_flops_tflops,
         memory_bandwidth_gbps=args.memory_bandwidth_gbps,
     )
     gpu_summary = analyze_gpu_records(
         analyzed["records"],
-        wall_time_us=float(aggregate.get("wall_time_us", 0.0)),
+        wall_time_us=float(filtered_aggregate.get("wall_time_us", 0.0)),
         memory_telemetry=gpu_memory_telemetry,
     )
     payload = export_trace(
         analyzed["records"],
         args.output,
-        summary={**aggregate, "classification": analyzed["summary"], "gpu": gpu_summary},
-        metadata={"timing_mode": args.timing_mode},
+        summary={
+            **filtered_aggregate,
+            "classification": analyzed["summary"],
+            "gpu": gpu_summary,
+        },
+        metadata={
+            "timing_mode": args.timing_mode,
+            "export_filter": filter_stats,
+        },
         compact_json=(args.json_format == "compact"),
     )
 
@@ -184,8 +256,14 @@ def _cmd_profile(args: argparse.Namespace) -> int:
         f"Wrote trace with {len(payload['traceEvents'])} events: {args.output} "
         f"(timing_mode={args.timing_mode})"
     )
+    if filter_stats["output_records"] != filter_stats["input_records"]:
+        print(
+            "Export filtering applied: "
+            f"{int(filter_stats['output_records'])}/{int(filter_stats['input_records'])} "
+            "records kept."
+        )
     if args.timing_mode == "cuda":
-        cuda_records = [item for item in records if bool(item.get("is_cuda", False))]
+        cuda_records = [item for item in filtered_records if bool(item.get("is_cuda", False))]
         positive_cuda_elapsed = sum(
             1 for item in cuda_records if float(item.get("cuda_elapsed_us", -1.0)) > 0.0
         )
@@ -193,7 +271,7 @@ def _cmd_profile(args: argparse.Namespace) -> int:
             print(
                 "Warning: CUDA timing mode is enabled, but no positive cuda_elapsed_us values were captured."
             )
-    _print_aggregate(aggregate)
+    _print_aggregate(filtered_aggregate)
     _print_gpu_diagnostics(gpu_summary)
     return 0
 
@@ -609,6 +687,28 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["compact", "pretty"],
         default="compact",
         help="Trace JSON formatting mode (default: compact)",
+    )
+    profile.add_argument(
+        "--start-us",
+        type=int,
+        help="Keep only events overlapping this start timestamp (microseconds)",
+    )
+    profile.add_argument(
+        "--end-us",
+        type=int,
+        help="Keep only events overlapping this end timestamp (microseconds)",
+    )
+    profile.add_argument(
+        "--min-duration-us",
+        type=float,
+        default=0.0,
+        help="Drop events shorter than this duration (microseconds)",
+    )
+    profile.add_argument(
+        "--sample-rate",
+        type=int,
+        default=1,
+        help="Keep every Nth event after filtering (default: 1)",
     )
     profile.add_argument("script_args", nargs=argparse.REMAINDER)
     profile.set_defaults(func=_cmd_profile)

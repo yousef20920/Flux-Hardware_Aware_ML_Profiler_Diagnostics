@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import EventDetail from './components/EventDetail';
 import SummaryPanel from './components/SummaryPanel';
 import Timeline from './components/Timeline';
@@ -22,17 +22,88 @@ export default function App() {
   const [sourceLabel, setSourceLabel] = useState('');
   const [error, setError] = useState('');
   const [showLoader, setShowLoader] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const workerRef = useRef(null);
+  const workerRequestIdRef = useRef(0);
+  const latestAppliedRequestRef = useRef(0);
 
-  function handleLoad(payload, source) {
+  useEffect(() => {
+    if (typeof Worker === 'undefined') {
+      return undefined;
+    }
+    const worker = new Worker(new URL('./workers/parseTraceWorker.js', import.meta.url), {
+      type: 'module'
+    });
+    workerRef.current = worker;
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  function applyParsedTrace(next, source) {
+    setParsed(next);
+    setSelectedEvent(next.events[0] ?? null);
+    setSourceLabel(source || 'Local file');
+    setError('');
+    setShowLoader(false);
+  }
+
+  function parseTraceText(traceText) {
+    const payload = JSON.parse(traceText);
+    if (!payload || !Array.isArray(payload.traceEvents)) {
+      throw new Error('Trace JSON must contain a traceEvents array.');
+    }
+    return parseTracePayload(payload);
+  }
+
+  async function handleLoadText(traceText, source) {
+    const requestId = ++workerRequestIdRef.current;
+    setIsParsing(true);
+    setError('');
     try {
-      const next = parseTracePayload(payload);
-      setParsed(next);
-      setSelectedEvent(next.events[0] ?? null);
-      setSourceLabel(source || 'Local file');
-      setError('');
-      setShowLoader(false);
+      const worker = workerRef.current;
+      if (!worker) {
+        const next = parseTraceText(traceText);
+        latestAppliedRequestRef.current = requestId;
+        applyParsedTrace(next, source);
+        return;
+      }
+
+      const next = await new Promise((resolve, reject) => {
+        const onMessage = (event) => {
+          const data = event.data || {};
+          if (data.id !== requestId) {
+            return;
+          }
+          worker.removeEventListener('message', onMessage);
+          worker.removeEventListener('error', onError);
+          if (data.ok) {
+            resolve(data.parsed);
+            return;
+          }
+          reject(new Error(data.error || 'Failed to parse trace payload.'));
+        };
+        const onError = (event) => {
+          worker.removeEventListener('message', onMessage);
+          worker.removeEventListener('error', onError);
+          reject(new Error(event?.message || 'Worker failed while parsing trace.'));
+        };
+        worker.addEventListener('message', onMessage);
+        worker.addEventListener('error', onError);
+        worker.postMessage({ id: requestId, traceText });
+      });
+
+      if (requestId >= latestAppliedRequestRef.current) {
+        latestAppliedRequestRef.current = requestId;
+        applyParsedTrace(next, source);
+      }
     } catch (loadError) {
-      setError(loadError.message || 'Failed to parse trace payload.');
+      setError(loadError?.message || 'Failed to parse trace payload.');
+    } finally {
+      if (requestId >= latestAppliedRequestRef.current) {
+        setIsParsing(false);
+      }
     }
   }
 
@@ -42,12 +113,16 @@ export default function App() {
       try {
         const response = await fetch('/trace.json', { cache: 'no-store' });
         if (!response.ok) return;
-        const payload = await response.json();
-        if (active) handleLoad(payload, '/trace.json');
+        const traceText = await response.text();
+        if (active) {
+          await handleLoadText(traceText, '/trace.json');
+        }
       } catch (_err) {}
     }
     bootstrap();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   const hasTrace = Boolean(parsed && parsed.events.length > 0);
@@ -111,7 +186,19 @@ export default function App() {
                 </p>
               </div>
             )}
-            <TraceLoader onLoad={handleLoad} onError={setError} />
+            <TraceLoader onLoadText={handleLoadText} onError={setError} />
+          </div>
+        )}
+
+        {isParsing && (
+          <div className="parsing-overlay reveal">
+            <div className="parsing-card">
+              <div className="parsing-spinner" />
+              <div className="parsing-title">Parsing Trace</div>
+              <div className="parsing-subtitle">
+                Processing large trace data in a background worker...
+              </div>
+            </div>
           </div>
         )}
 
