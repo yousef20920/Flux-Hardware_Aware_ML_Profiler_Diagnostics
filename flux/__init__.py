@@ -1,7 +1,7 @@
 """
 Flux package bootstrap.
 
-Currently exposes the compiled extension entrypoints.
+Exposes the compiled extension entrypoints and the Python profiler interface.
 """
 
 try:
@@ -10,4 +10,6 @@ try:
 except ImportError:
     _C = None
 
-__all__ = ["_C"]
+from .profiler import FluxProfiler
+
+__all__ = ["_C", "FluxProfiler"]

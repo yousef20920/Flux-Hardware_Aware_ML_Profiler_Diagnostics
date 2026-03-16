@@ -18,6 +18,7 @@ setup(
         )
     ],
     cmdclass={"build_ext": BuildExtension.with_options(no_python_abi_suffix=True)},
+    entry_points={"console_scripts": ["flux=flux.cli:main"]},
     install_requires=["torch>=2.0"],
     python_requires=">=3.9",
 )
