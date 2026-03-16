@@ -1,5 +1,8 @@
 #include "flux_cuda_hooks.h"
 
+#include <cstdio>
+#include <cstdlib>
+
 #if defined(__has_include)
 #if __has_include(<cuda_runtime_api.h>) && __has_include(<c10/cuda/CUDAFunctions.h>) && \
     __has_include(<c10/cuda/CUDAStream.h>) && __has_include(<c10/cuda/CUDAGuard.h>)
@@ -23,6 +26,25 @@ namespace {
 
 bool is_success(cudaError_t err) {
   return err == cudaSuccess;
+}
+
+bool debug_enabled() {
+  const char* env = std::getenv("FLUX_CUDA_DEBUG");
+  return env != nullptr && env[0] != '\0' && env[0] != '0';
+}
+
+void log_cuda_error(const char* stage, cudaError_t err, int device_id) {
+  if (!debug_enabled()) {
+    return;
+  }
+  std::fprintf(
+      stderr,
+      "[flux-cuda] %s failed device=%d code=%d name=%s msg=%s\n",
+      stage,
+      device_id,
+      static_cast<int>(err),
+      cudaGetErrorName(err),
+      cudaGetErrorString(err));
 }
 
 cudaEvent_t to_event(std::uintptr_t ptr) {
@@ -80,16 +102,22 @@ bool record_start(CudaEventPair* pair, int device_id) {
   cudaEvent_t start_event = nullptr;
   cudaEvent_t end_event = nullptr;
 
-  if (!is_success(cudaEventCreateWithFlags(&start_event, cudaEventDefault))) {
+  auto err = cudaEventCreateWithFlags(&start_event, cudaEventDefault);
+  if (!is_success(err)) {
+    log_cuda_error("cudaEventCreateWithFlags(start)", err, resolved_device);
     reset_pair(pair);
     return false;
   }
-  if (!is_success(cudaEventCreateWithFlags(&end_event, cudaEventDefault))) {
+  err = cudaEventCreateWithFlags(&end_event, cudaEventDefault);
+  if (!is_success(err)) {
+    log_cuda_error("cudaEventCreateWithFlags(end)", err, resolved_device);
     cudaEventDestroy(start_event);
     reset_pair(pair);
     return false;
   }
-  if (!is_success(cudaEventRecord(start_event, stream))) {
+  err = cudaEventRecord(start_event, stream);
+  if (!is_success(err)) {
+    log_cuda_error("cudaEventRecord(start)", err, resolved_device);
     cudaEventDestroy(start_event);
     cudaEventDestroy(end_event);
     reset_pair(pair);
@@ -118,17 +146,23 @@ double record_end_elapsed_us(CudaEventPair* pair) {
   auto end_event = to_event(pair->end_event);
   auto stream = to_stream(pair->stream_ptr);
 
-  if (!is_success(cudaEventRecord(end_event, stream))) {
+  auto err = cudaEventRecord(end_event, stream);
+  if (!is_success(err)) {
+    log_cuda_error("cudaEventRecord(end)", err, resolved_device);
     reset_pair(pair);
     return -1.0;
   }
-  if (!is_success(cudaEventSynchronize(end_event))) {
+  err = cudaEventSynchronize(end_event);
+  if (!is_success(err)) {
+    log_cuda_error("cudaEventSynchronize(end)", err, resolved_device);
     reset_pair(pair);
     return -1.0;
   }
 
   float elapsed_ms = 0.0f;
-  if (!is_success(cudaEventElapsedTime(&elapsed_ms, start_event, end_event))) {
+  err = cudaEventElapsedTime(&elapsed_ms, start_event, end_event);
+  if (!is_success(err)) {
+    log_cuda_error("cudaEventElapsedTime", err, resolved_device);
     reset_pair(pair);
     return -1.0;
   }
