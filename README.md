@@ -157,7 +157,13 @@ Serve the dashboard and expose `/trace.json`.
 flux serve --trace <trace.json> --port 8080
 ```
 
-If `dashboard/dist` is missing, Flux serves a fallback page with build instructions.
+Dashboard build behavior:
+
+- By default, Flux uses `--dashboard-build auto` and rebuilds when dashboard source files are newer than `dist`.
+- Use `--dashboard-build always` to force rebuild every run.
+- Use `--dashboard-build never` to skip rebuild.
+
+If `dashboard/dist` is missing and build is not available, Flux serves a fallback page with build instructions.
 
 ## CI/CD Regression Flow
 

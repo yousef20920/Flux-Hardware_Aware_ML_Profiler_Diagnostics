@@ -4,6 +4,7 @@ import argparse
 import json
 import mimetypes
 import runpy
+import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -358,18 +359,69 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
     return 1 if (has_cpu_regression or has_gpu_regression) else 0
 
 
-def _dashboard_dist_dir() -> Path:
-    # First, check if there's a dashboard build in the current working directory.
-    # This ensures developers running `flux serve` from the repository root always
-    # get their local build, even if flux is installed globally.
-    cwd_dist = Path.cwd() / "dashboard" / "dist"
-    if cwd_dist.exists():
-        return cwd_dist
+def _dashboard_root_dir() -> Path:
+    # Prefer the current repo checkout when running from project root.
+    cwd_dashboard = Path.cwd() / "dashboard"
+    if (cwd_dashboard / "src").exists() and (cwd_dashboard / "package.json").exists():
+        return cwd_dashboard
 
-    # Fallback: check relative to the currently executed cli.py file.
-    # This works for `pip install -e .` (editable installs).
+    # Fallback to the dashboard shipped next to the installed Flux package.
     project_root = Path(__file__).resolve().parent.parent
-    return project_root / "dashboard" / "dist"
+    return project_root / "dashboard"
+
+
+def _dashboard_dist_dir() -> Path:
+    return _dashboard_root_dir() / "dist"
+
+
+def _latest_mtime_in_dir(path: Path) -> float:
+    if not path.exists():
+        return 0.0
+    latest = 0.0
+    for file_path in path.rglob("*"):
+        if file_path.is_file():
+            latest = max(latest, file_path.stat().st_mtime)
+    return latest
+
+
+def _dashboard_needs_build(dashboard_root: Path) -> bool:
+    dist_index = dashboard_root / "dist" / "index.html"
+    if not dist_index.exists():
+        return True
+
+    latest_source = 0.0
+    for file_path in (
+        dashboard_root / "index.html",
+        dashboard_root / "package.json",
+        dashboard_root / "package-lock.json",
+        dashboard_root / "vite.config.js",
+    ):
+        if file_path.exists():
+            latest_source = max(latest_source, file_path.stat().st_mtime)
+
+    latest_source = max(latest_source, _latest_mtime_in_dir(dashboard_root / "src"))
+    latest_source = max(latest_source, _latest_mtime_in_dir(dashboard_root / "public"))
+    return latest_source > dist_index.stat().st_mtime
+
+
+def _build_dashboard(dashboard_root: Path) -> bool:
+    if not dashboard_root.exists():
+        return False
+    result = subprocess.run(
+        ["npm", "run", "build"],
+        cwd=dashboard_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode == 0:
+        return True
+    print("Dashboard build failed. Serving fallback/previous build.")
+    if result.stdout.strip():
+        print(result.stdout.strip())
+    if result.stderr.strip():
+        print(result.stderr.strip())
+    return False
 
 
 def _fallback_index_html(trace_name: str, dashboard_dist: Path) -> bytes:
@@ -431,6 +483,9 @@ def _build_trace_server(trace_path: Path, port: int) -> HTTPServer:
             if self.path == "/trace.json":
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
                 self.send_header("Content-Length", str(len(trace_bytes)))
                 self.end_headers()
                 self.wfile.write(trace_bytes)
@@ -450,6 +505,9 @@ def _build_trace_server(trace_path: Path, port: int) -> HTTPServer:
                     self.send_header(
                         "Content-Type", (content_type or "application/octet-stream")
                     )
+                    self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+                    self.send_header("Pragma", "no-cache")
+                    self.send_header("Expires", "0")
                     self.send_header("Content-Length", str(len(data)))
                     self.end_headers()
                     self.wfile.write(data)
@@ -461,6 +519,9 @@ def _build_trace_server(trace_path: Path, port: int) -> HTTPServer:
                     data = index_file.read_bytes()
                     self.send_response(200)
                     self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+                    self.send_header("Pragma", "no-cache")
+                    self.send_header("Expires", "0")
                     self.send_header("Content-Length", str(len(data)))
                     self.end_headers()
                     self.wfile.write(data)
@@ -470,6 +531,9 @@ def _build_trace_server(trace_path: Path, port: int) -> HTTPServer:
                 body = _fallback_index_html(trace_name, dist_dir)
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
@@ -488,6 +552,15 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     trace_path = Path(args.trace)
     if not trace_path.exists():
         raise FileNotFoundError(f"Trace file not found: {trace_path}")
+
+    dashboard_root = _dashboard_root_dir()
+    if args.dashboard_build == "always":
+        print(f"Building dashboard (mode=always) from {dashboard_root} ...")
+        _build_dashboard(dashboard_root)
+    elif args.dashboard_build == "auto":
+        if _dashboard_needs_build(dashboard_root):
+            print(f"Building dashboard (mode=auto) from {dashboard_root} ...")
+            _build_dashboard(dashboard_root)
 
     server = _build_trace_server(trace_path, args.port)
     dashboard_dist = _dashboard_dist_dir()
@@ -583,6 +656,12 @@ def build_parser() -> argparse.ArgumentParser:
     serve = subparsers.add_parser("serve", help="Serve a trace JSON file over HTTP")
     serve.add_argument("--trace", required=True, help="Trace JSON path")
     serve.add_argument("--port", type=int, default=8080, help="Port for local server")
+    serve.add_argument(
+        "--dashboard-build",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="Dashboard build policy before serving (default: auto)",
+    )
     serve.set_defaults(func=_cmd_serve)
 
     return parser
