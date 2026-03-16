@@ -135,7 +135,7 @@ bool record_start(CudaEventPair* pair, int device_id) {
 
 double record_end_elapsed_us(CudaEventPair* pair) {
   if (pair == nullptr || !pair->active || pair->start_event == 0 ||
-      pair->end_event == 0 || pair->stream_ptr == 0) {
+      pair->end_event == 0) {
     return -1.0;
   }
 
