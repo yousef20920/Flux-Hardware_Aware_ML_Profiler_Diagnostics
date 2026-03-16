@@ -38,13 +38,21 @@ class FluxProfiler(ContextDecorator):
         if not torch.cuda.is_available():
             return
 
-        device_count = torch.cuda.device_count()
+        try:
+            device_count = int(torch.cuda.device_count())
+        except Exception:
+            return
+
         for device_id in range(device_count):
-            torch.cuda.reset_peak_memory_stats(device_id)
-            self._gpu_memory_start[device_id] = {
-                "allocated_start_bytes": int(torch.cuda.memory_allocated(device_id)),
-                "reserved_start_bytes": int(torch.cuda.memory_reserved(device_id)),
-            }
+            try:
+                torch.cuda.reset_peak_memory_stats(device_id)
+                self._gpu_memory_start[device_id] = {
+                    "allocated_start_bytes": int(torch.cuda.memory_allocated(device_id)),
+                    "reserved_start_bytes": int(torch.cuda.memory_reserved(device_id)),
+                }
+            except Exception:
+                # Skip devices that are visible but not queryable in this runtime.
+                continue
 
     def _capture_gpu_memory_stop(self) -> Dict[str, Any]:
         if not torch.cuda.is_available():
@@ -76,19 +84,32 @@ class FluxProfiler(ContextDecorator):
             "peak_reserved_bytes": 0,
         }
 
-        device_count = torch.cuda.device_count()
+        try:
+            device_count = int(torch.cuda.device_count())
+        except Exception:
+            return {
+                "cuda_available": False,
+                "device_count": 0,
+                "devices": [],
+                "totals": totals,
+            }
+
         for device_id in range(device_count):
-            start = self._gpu_memory_start.get(
-                device_id, {"allocated_start_bytes": 0, "reserved_start_bytes": 0}
-            )
-            allocated_end = int(torch.cuda.memory_allocated(device_id))
-            reserved_end = int(torch.cuda.memory_reserved(device_id))
-            peak_allocated = int(torch.cuda.max_memory_allocated(device_id))
-            peak_reserved = int(torch.cuda.max_memory_reserved(device_id))
+            try:
+                start = self._gpu_memory_start.get(
+                    device_id, {"allocated_start_bytes": 0, "reserved_start_bytes": 0}
+                )
+                allocated_end = int(torch.cuda.memory_allocated(device_id))
+                reserved_end = int(torch.cuda.memory_reserved(device_id))
+                peak_allocated = int(torch.cuda.max_memory_allocated(device_id))
+                peak_reserved = int(torch.cuda.max_memory_reserved(device_id))
+                device_name = torch.cuda.get_device_name(device_id)
+            except Exception:
+                continue
 
             item = {
                 "device_id": device_id,
-                "device_name": torch.cuda.get_device_name(device_id),
+                "device_name": device_name,
                 "allocated_start_bytes": int(start["allocated_start_bytes"]),
                 "allocated_end_bytes": allocated_end,
                 "allocated_delta_bytes": allocated_end - int(start["allocated_start_bytes"]),
@@ -105,7 +126,7 @@ class FluxProfiler(ContextDecorator):
             devices.append(item)
 
         return {
-            "cuda_available": True,
+            "cuda_available": bool(devices),
             "device_count": device_count,
             "devices": devices,
             "totals": totals,

@@ -142,6 +142,10 @@ def _run_script_under_profiler(
     if not script_path.exists():
         raise FileNotFoundError(f"Script not found: {script_path}")
 
+    # argparse.REMAINDER may keep a leading "--" separator.
+    if script_args and script_args[0] == "--":
+        script_args = script_args[1:]
+
     old_argv = list(sys.argv)
     sys.argv = [str(script_path)] + script_args
     try:
@@ -296,38 +300,50 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
         current_gpu_means = _op_means(
             records,
             metric_key="cuda_elapsed_us",
-            use_cuda_fallback=True,
             only_cuda=True,
         )
         baseline_gpu_means = _op_means(
             baseline_records,
             metric_key="cuda_elapsed_us",
-            use_cuda_fallback=True,
             only_cuda=True,
         )
-        gpu_regressions, gpu_missing, gpu_skipped = _regression_report(
-            current_gpu_means,
-            baseline_gpu_means,
-            args.gpu_threshold,
-            min_baseline_us=args.gpu_min_baseline_us,
-            min_regression_delta_us=args.gpu_min_regression_delta_us,
-        )
-        _print_regression_block(
-            label="GPU",
-            baseline_path=args.baseline,
-            threshold=args.gpu_threshold,
-            min_baseline_us=args.gpu_min_baseline_us,
-            min_regression_delta_us=args.gpu_min_regression_delta_us,
-            regressions=gpu_regressions,
-            missing=gpu_missing,
-            skipped=gpu_skipped,
-        )
 
-        if args.gpu_ci_mode == "require" and not current_gpu_means:
+        if not current_gpu_means or not baseline_gpu_means:
             print("")
-            print("GPU regression mode is require, but no GPU timing data was found.")
-            has_gpu_regression = True
+            if not current_gpu_means and not baseline_gpu_means:
+                print(
+                    "GPU regression check skipped: no CUDA elapsed timing data in current or baseline trace."
+                )
+            elif not current_gpu_means:
+                print(
+                    "GPU regression check skipped: no CUDA elapsed timing data in current trace."
+                )
+            else:
+                print(
+                    "GPU regression check skipped: no CUDA elapsed timing data in baseline trace."
+                )
+
+            if args.gpu_ci_mode == "require":
+                print("GPU regression mode is require, so this is a failure.")
+                has_gpu_regression = True
         else:
+            gpu_regressions, gpu_missing, gpu_skipped = _regression_report(
+                current_gpu_means,
+                baseline_gpu_means,
+                args.gpu_threshold,
+                min_baseline_us=args.gpu_min_baseline_us,
+                min_regression_delta_us=args.gpu_min_regression_delta_us,
+            )
+            _print_regression_block(
+                label="GPU",
+                baseline_path=args.baseline,
+                threshold=args.gpu_threshold,
+                min_baseline_us=args.gpu_min_baseline_us,
+                min_regression_delta_us=args.gpu_min_regression_delta_us,
+                regressions=gpu_regressions,
+                missing=gpu_missing,
+                skipped=gpu_skipped,
+            )
             has_gpu_regression = bool(gpu_regressions)
 
     return 1 if (has_cpu_regression or has_gpu_regression) else 0
