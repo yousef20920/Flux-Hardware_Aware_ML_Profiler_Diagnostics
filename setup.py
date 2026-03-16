@@ -11,7 +11,7 @@ setup(
     ext_modules=[
         CppExtension(
             name="flux._C",
-            sources=["csrc/flux_hooks.cpp"],
+            sources=["csrc/flux_hooks.cpp", "csrc/flux_cuda_hooks.cpp"],
             include_dirs=["csrc"],
             # C++17 is required by modern PyTorch extension APIs.
             extra_compile_args={"cxx": ["-O3", "-std=c++17"]},

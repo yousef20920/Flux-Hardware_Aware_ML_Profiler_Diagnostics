@@ -11,6 +11,8 @@ const COMPUTE_HEAVY = new Set([
 
 const MEMORY_HEAVY = new Set(['aten::relu', 'aten::layer_norm', 'aten::batch_norm']);
 
+const TRANSFER_HEAVY = new Set(['aten::copy_', 'aten::_to_copy', 'aten::to', 'cudaMemcpy']);
+
 function toNumber(value, fallback = 0) {
   const n = Number(value);
   return Number.isFinite(n) ? n : fallback;
@@ -29,15 +31,37 @@ function classify(opName, args = {}) {
   return 'unknown';
 }
 
+function classifyGpuBucket(opName) {
+  if (TRANSFER_HEAVY.has(opName) || opName.includes('copy') || opName.includes('to')) {
+    return 'transfer';
+  }
+  if (MEMORY_HEAVY.has(opName)) {
+    return 'memory';
+  }
+  if (COMPUTE_HEAVY.has(opName)) {
+    return 'compute';
+  }
+  return 'other';
+}
+
 function normalizeEvent(event, index) {
   const args = event?.args ?? {};
   const ts = toNumber(event?.ts, 0);
   const dur = Math.max(0, toNumber(event?.dur, 0));
   const opName = String(event?.name ?? args?.op_name ?? `event-${index}`);
   const threadId = toNumber(event?.tid ?? args?.thread_id, 0);
+  const isCuda = Boolean(args?.is_cuda);
+  const deviceId = toNumber(args?.device_id, -1);
+  const streamId = toNumber(args?.stream_id, -1);
+  const cudaElapsedUs = toNumber(args?.cuda_elapsed_us, -1);
+
+  const laneType = isCuda && deviceId >= 0 && streamId >= 0 ? 'gpu' : 'cpu';
+  const laneId = laneType === 'gpu' ? `gpu-${deviceId}-${streamId}` : `cpu-${threadId}`;
+  const laneLabel =
+    laneType === 'gpu' ? `GPU ${deviceId} / Stream ${streamId}` : `CPU Thread ${threadId}`;
 
   return {
-    id: `${threadId}-${ts}-${index}`,
+    id: `${laneId}-${ts}-${index}`,
     name: opName,
     ts,
     dur,
@@ -45,7 +69,14 @@ function normalizeEvent(event, index) {
     tid: threadId,
     pid: toNumber(event?.pid, 1),
     args,
-    classification: classify(opName, args)
+    classification: classify(opName, args),
+    isCuda,
+    deviceId,
+    streamId,
+    cudaElapsedUs,
+    laneType,
+    laneId,
+    laneLabel
   };
 }
 
@@ -74,6 +105,83 @@ function computeActiveTime(events) {
   return active;
 }
 
+function buildLaneSortKey(laneType, laneEvents) {
+  if (laneType === 'gpu') {
+    const first = laneEvents[0];
+    return [1, first.deviceId, first.streamId];
+  }
+  return [0, laneEvents[0]?.tid ?? 0, 0];
+}
+
+function deriveGpuSummary(events, wallTimeUs, sourceGpuSummary) {
+  const cudaEvents = events.filter((event) => event.isCuda);
+  const cudaOps = cudaEvents.length;
+  let cudaTimeUs = 0;
+  let computeTimeUs = 0;
+  let memoryTimeUs = 0;
+  let transferTimeUs = 0;
+
+  for (const event of cudaEvents) {
+    const effectiveUs = event.cudaElapsedUs > 0 ? event.cudaElapsedUs : event.dur;
+    cudaTimeUs += effectiveUs;
+
+    const bucket = classifyGpuBucket(event.name);
+    if (bucket === 'compute') {
+      computeTimeUs += effectiveUs;
+    } else if (bucket === 'memory') {
+      memoryTimeUs += effectiveUs;
+    } else if (bucket === 'transfer') {
+      transferTimeUs += effectiveUs;
+    }
+  }
+
+  const gpuActivityPct = wallTimeUs > 0 ? Math.min(100, (cudaTimeUs / wallTimeUs) * 100) : 0;
+  const computeSharePct = cudaTimeUs > 0 ? (computeTimeUs / cudaTimeUs) * 100 : 0;
+  const memorySharePct = cudaTimeUs > 0 ? (memoryTimeUs / cudaTimeUs) * 100 : 0;
+  const transferSharePct = cudaTimeUs > 0 ? (transferTimeUs / cudaTimeUs) * 100 : 0;
+
+  const derived = {
+    available: cudaOps > 0,
+    cuda_ops: cudaOps,
+    cuda_time_us: Number(cudaTimeUs.toFixed(2)),
+    gpu_activity_pct: Number(gpuActivityPct.toFixed(2)),
+    sm_utilization_estimate_pct: Number((gpuActivityPct * (computeSharePct / 100)).toFixed(2)),
+    memory_bandwidth_pressure_estimate_pct: Number(
+      (gpuActivityPct * (memorySharePct / 100)).toFixed(2)
+    ),
+    h2d_transfer_pressure_estimate_pct: Number(
+      (gpuActivityPct * (transferSharePct / 100)).toFixed(2)
+    ),
+    compute_share_pct: Number(computeSharePct.toFixed(2)),
+    memory_share_pct: Number(memorySharePct.toFixed(2)),
+    transfer_share_pct: Number(transferSharePct.toFixed(2)),
+    memory: {
+      cuda_available: false,
+      device_count: 0,
+      devices: [],
+      totals: {
+        allocated_start_bytes: 0,
+        allocated_end_bytes: 0,
+        allocated_delta_bytes: 0,
+        reserved_start_bytes: 0,
+        reserved_end_bytes: 0,
+        reserved_delta_bytes: 0,
+        peak_allocated_bytes: 0,
+        peak_reserved_bytes: 0
+      }
+    }
+  };
+
+  if (sourceGpuSummary && typeof sourceGpuSummary === 'object') {
+    return {
+      ...derived,
+      ...sourceGpuSummary,
+      memory: sourceGpuSummary.memory ?? derived.memory
+    };
+  }
+  return derived;
+}
+
 export function parseTracePayload(payload) {
   const rawEvents = Array.isArray(payload?.traceEvents) ? payload.traceEvents : [];
 
@@ -85,6 +193,7 @@ export function parseTracePayload(payload) {
   if (!events.length) {
     return {
       sourceSummary: payload?.summary ?? null,
+      sourceMetadata: payload?.metadata ?? null,
       events: [],
       lanes: [],
       stats: {
@@ -96,7 +205,10 @@ export function parseTracePayload(payload) {
         utilizationPct: 0,
         classifications: {},
         classificationPct: {},
-        topOps: []
+        topOps: [],
+        cpuLaneCount: 0,
+        gpuLaneCount: 0,
+        gpu: deriveGpuSummary([], 0, payload?.summary?.gpu ?? null)
       },
       bounds: {
         startUs: 0,
@@ -123,10 +235,17 @@ export function parseTracePayload(payload) {
   for (const event of events) {
     totalDurationUs += event.dur;
 
-    if (!laneMap.has(event.tid)) {
-      laneMap.set(event.tid, []);
+    if (!laneMap.has(event.laneId)) {
+      laneMap.set(event.laneId, {
+        id: event.laneId,
+        tid: event.tid,
+        type: event.laneType,
+        label: event.laneLabel,
+        events: [],
+        sortKey: buildLaneSortKey(event.laneType, [event])
+      });
     }
-    laneMap.get(event.tid).push(event);
+    laneMap.get(event.laneId).events.push(event);
 
     if (!opStats.has(event.name)) {
       opStats.set(event.name, { opName: event.name, count: 0, totalUs: 0 });
@@ -141,14 +260,21 @@ export function parseTracePayload(payload) {
     classifications[event.classification] += 1;
   }
 
-  const lanes = [...laneMap.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([tid, laneEvents]) => ({
-      tid,
-      events: laneEvents,
-      totalDurationUs: laneEvents.reduce((sum, item) => sum + item.dur, 0),
-      eventCount: laneEvents.length
-    }));
+  const lanes = [...laneMap.values()]
+    .map((lane) => ({
+      ...lane,
+      totalDurationUs: lane.events.reduce((sum, item) => sum + item.dur, 0),
+      eventCount: lane.events.length
+    }))
+    .sort((a, b) => {
+      if (a.sortKey[0] !== b.sortKey[0]) {
+        return a.sortKey[0] - b.sortKey[0];
+      }
+      if (a.sortKey[1] !== b.sortKey[1]) {
+        return a.sortKey[1] - b.sortKey[1];
+      }
+      return a.sortKey[2] - b.sortKey[2];
+    });
 
   const topOps = [...opStats.values()]
     .map((item) => ({
@@ -170,8 +296,13 @@ export function parseTracePayload(payload) {
     ])
   );
 
+  const gpuLaneCount = lanes.filter((lane) => lane.type === 'gpu').length;
+  const cpuLaneCount = lanes.filter((lane) => lane.type === 'cpu').length;
+  const gpu = deriveGpuSummary(events, rangeUs, payload?.summary?.gpu ?? null);
+
   return {
     sourceSummary: payload?.summary ?? null,
+    sourceMetadata: payload?.metadata ?? null,
     events,
     lanes,
     stats: {
@@ -183,7 +314,10 @@ export function parseTracePayload(payload) {
       utilizationPct,
       classifications,
       classificationPct,
-      topOps
+      topOps,
+      cpuLaneCount,
+      gpuLaneCount,
+      gpu
     },
     bounds: {
       startUs,

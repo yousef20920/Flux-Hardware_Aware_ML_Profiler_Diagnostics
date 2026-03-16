@@ -14,6 +14,10 @@ def _trace_args_from_record(record: Record) -> Dict[str, Any]:
         "classification",
         "classification_reason",
         "bottleneck_ratio",
+        "is_cuda",
+        "device_id",
+        "stream_id",
+        "cuda_elapsed_us",
     )
     args: Dict[str, Any] = {}
     for key in keys:

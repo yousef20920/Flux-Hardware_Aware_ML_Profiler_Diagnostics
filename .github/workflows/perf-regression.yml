@@ -14,7 +14,12 @@ jobs:
       THRESHOLD: "5"
       MIN_BASELINE_US: "25"
       MIN_REGRESSION_DELTA_US: "3"
+      GPU_CI_MODE: "off"
+      GPU_THRESHOLD: "5"
+      GPU_MIN_BASELINE_US: "25"
+      GPU_MIN_REGRESSION_DELTA_US: "3"
       BASELINE_MODE: ephemeral
+      TIMING_MODE: auto
       CURRENT_TRACE: trace-current.json
       BASELINE_TRACE: trace-baseline.json
 
@@ -48,8 +53,8 @@ jobs:
       - name: Profile current
         run: |
           # Prime one profiling run to reduce startup/warmup skew.
-          flux profile --script examples/profile_simple_model.py --output trace-warmup.json
-          flux profile --script examples/profile_simple_model.py --output "$CURRENT_TRACE"
+          flux profile --timing-mode "$TIMING_MODE" --script examples/profile_simple_model.py --output trace-warmup.json
+          flux profile --timing-mode "$TIMING_MODE" --script examples/profile_simple_model.py --output "$CURRENT_TRACE"
 
       - name: Prepare baseline
         run: |
@@ -58,7 +63,7 @@ jobs:
             cp ci/baseline/trace-baseline.json "$BASELINE_TRACE"
           else
             echo "Generating baseline in this run (mode: $BASELINE_MODE)."
-            flux profile --script examples/profile_simple_model.py --output "$BASELINE_TRACE"
+            flux profile --timing-mode "$TIMING_MODE" --script examples/profile_simple_model.py --output "$BASELINE_TRACE"
           fi
 
       - name: Regression check
@@ -68,7 +73,11 @@ jobs:
             --baseline "$BASELINE_TRACE" \
             --threshold "$THRESHOLD" \
             --min-baseline-us "$MIN_BASELINE_US" \
-            --min-regression-delta-us "$MIN_REGRESSION_DELTA_US"
+            --min-regression-delta-us "$MIN_REGRESSION_DELTA_US" \
+            --gpu-ci-mode "$GPU_CI_MODE" \
+            --gpu-threshold "$GPU_THRESHOLD" \
+            --gpu-min-baseline-us "$GPU_MIN_BASELINE_US" \
+            --gpu-min-regression-delta-us "$GPU_MIN_REGRESSION_DELTA_US"
 
       - name: Upload traces
         if: always()

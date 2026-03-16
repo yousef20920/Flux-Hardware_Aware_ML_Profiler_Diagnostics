@@ -12,12 +12,16 @@ from urllib.parse import unquote, urlparse
 
 from .aggregator import aggregate_records
 from .analyzer import analyze_records
+from .gpu_analyzer import analyze_gpu_records
 from .profiler import FluxProfiler
 from .trace_exporter import export_trace
 
 
-def _extract_records_from_trace(path: Path) -> List[Dict[str, Any]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+def _read_trace_payload(path: Path) -> Dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _extract_records_from_payload(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
     events = payload.get("traceEvents", [])
     records: List[Dict[str, Any]] = []
     for event in events:
@@ -32,17 +36,46 @@ def _extract_records_from_trace(path: Path) -> List[Dict[str, Any]]:
                 "end_us": int(event.get("ts", 0)) + int(event.get("dur", 0)),
                 "thread_id": int(event.get("tid", 0)),
                 "classification": args.get("classification"),
+                "is_cuda": bool(args.get("is_cuda", False)),
+                "device_id": int(args.get("device_id", -1)),
+                "stream_id": int(args.get("stream_id", -1)),
+                "cuda_elapsed_us": float(args.get("cuda_elapsed_us", -1.0)),
             }
         )
     records.sort(key=lambda x: (x["start_us"], x["end_us"]))
     return records
 
 
-def _op_means(records: Iterable[Dict[str, Any]]) -> Dict[str, float]:
-    buckets: Dict[str, List[int]] = {}
+def _extract_records_from_trace(path: Path) -> List[Dict[str, Any]]:
+    return _extract_records_from_payload(_read_trace_payload(path))
+
+
+def _as_float(value: Any, default: float = 0.0) -> float:
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _op_means(
+    records: Iterable[Dict[str, Any]],
+    metric_key: str = "duration_us",
+    use_cuda_fallback: bool = False,
+    only_cuda: bool = False,
+) -> Dict[str, float]:
+    buckets: Dict[str, List[float]] = {}
     for item in records:
+        if only_cuda and not bool(item.get("is_cuda", False)):
+            continue
         op_name = str(item.get("op_name", "unknown"))
-        buckets.setdefault(op_name, []).append(int(item.get("duration_us", 0)))
+        metric = _as_float(item.get(metric_key), -1.0)
+        if metric <= 0 and use_cuda_fallback:
+            metric = _as_float(item.get("duration_us"), 0.0)
+        if metric <= 0:
+            continue
+        buckets.setdefault(op_name, []).append(metric)
     return {name: (sum(values) / len(values)) for name, values in buckets.items() if values}
 
 
@@ -67,36 +100,86 @@ def _print_aggregate(aggregate: Dict[str, Any]) -> None:
         )
 
 
-def _run_script_under_profiler(script_path: Path, script_args: List[str]) -> List[Dict[str, Any]]:
+def _print_gpu_diagnostics(gpu_summary: Dict[str, Any]) -> None:
+    print("")
+    print("GPU diagnostics:")
+    if not gpu_summary.get("available", False):
+        print("  GPU data: not available in this trace.")
+        return
+
+    print(f"  CUDA ops: {int(gpu_summary.get('cuda_ops', 0))}")
+    print(f"  CUDA time: {_format_us(float(gpu_summary.get('cuda_time_us', 0.0)))}")
+    print(f"  GPU activity estimate: {float(gpu_summary.get('gpu_activity_pct', 0.0)):.2f}%")
+    print(
+        "  SM utilization estimate: "
+        f"{float(gpu_summary.get('sm_utilization_estimate_pct', 0.0)):.2f}%"
+    )
+    print(
+        "  Memory bandwidth pressure estimate: "
+        f"{float(gpu_summary.get('memory_bandwidth_pressure_estimate_pct', 0.0)):.2f}%"
+    )
+    print(
+        "  Host-to-device transfer pressure estimate: "
+        f"{float(gpu_summary.get('h2d_transfer_pressure_estimate_pct', 0.0)):.2f}%"
+    )
+
+    memory = gpu_summary.get("memory") or {}
+    if memory.get("cuda_available", False):
+        totals = memory.get("totals") or {}
+        print(
+            f"  Memory allocated delta: {int(totals.get('allocated_delta_bytes', 0))} bytes"
+        )
+        print(
+            f"  Memory reserved delta: {int(totals.get('reserved_delta_bytes', 0))} bytes"
+        )
+        print(f"  Peak allocated: {int(totals.get('peak_allocated_bytes', 0))} bytes")
+        print(f"  Peak reserved: {int(totals.get('peak_reserved_bytes', 0))} bytes")
+
+
+def _run_script_under_profiler(
+    script_path: Path, script_args: List[str], timing_mode: str
+) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     if not script_path.exists():
         raise FileNotFoundError(f"Script not found: {script_path}")
 
     old_argv = list(sys.argv)
     sys.argv = [str(script_path)] + script_args
     try:
-        with FluxProfiler() as profiler:
+        with FluxProfiler(timing_mode=timing_mode) as profiler:
             runpy.run_path(str(script_path), run_name="__main__")
-        return profiler.records
+        return profiler.records, profiler.gpu_memory_telemetry
     finally:
         sys.argv = old_argv
 
 
 def _cmd_profile(args: argparse.Namespace) -> int:
-    records = _run_script_under_profiler(Path(args.script), args.script_args)
+    records, gpu_memory_telemetry = _run_script_under_profiler(
+        Path(args.script), args.script_args, args.timing_mode
+    )
     aggregate = aggregate_records(records)
     analyzed = analyze_records(
         records,
         peak_flops_tflops=args.peak_flops_tflops,
         memory_bandwidth_gbps=args.memory_bandwidth_gbps,
     )
+    gpu_summary = analyze_gpu_records(
+        analyzed["records"],
+        wall_time_us=float(aggregate.get("wall_time_us", 0.0)),
+        memory_telemetry=gpu_memory_telemetry,
+    )
     payload = export_trace(
         analyzed["records"],
         args.output,
-        summary={**aggregate, "classification": analyzed["summary"]},
+        summary={**aggregate, "classification": analyzed["summary"], "gpu": gpu_summary},
+        metadata={"timing_mode": args.timing_mode},
     )
 
-    print(f"Wrote trace with {len(payload['traceEvents'])} events: {args.output}")
+    print(
+        f"Wrote trace with {len(payload['traceEvents'])} events: {args.output} "
+        f"(timing_mode={args.timing_mode})"
+    )
     _print_aggregate(aggregate)
+    _print_gpu_diagnostics(gpu_summary)
     return 0
 
 
@@ -132,16 +215,61 @@ def _regression_report(
     return regressions, sorted(missing_in_baseline), sorted(skipped_small_baseline)
 
 
+def _print_regression_block(
+    *,
+    label: str,
+    baseline_path: str,
+    threshold: float,
+    min_baseline_us: float,
+    min_regression_delta_us: float,
+    regressions: List[Tuple[str, float, float, float, float]],
+    missing: List[str],
+    skipped: List[str],
+    value_unit: str = "us",
+) -> None:
+    print("")
+    print(
+        f"{label} regression check vs baseline ({baseline_path}) with threshold {threshold:.2f}%:"
+    )
+    print(
+        f"  Filters: min_baseline_us={min_baseline_us:.2f}, "
+        f"min_regression_delta_us={min_regression_delta_us:.2f}"
+    )
+    if missing:
+        print(f"  Ops missing in baseline: {', '.join(missing[:10])}")
+    if skipped:
+        print(f"  Ops skipped by min_baseline_us: {', '.join(skipped[:10])}")
+    if not regressions:
+        print("  No regressions detected.")
+        return
+
+    print("  Regressions:")
+    for op_name, baseline, current, delta_pct, delta_us in regressions:
+        print(
+            f"    {op_name}: baseline={_format_us(baseline)} "
+            f"current={_format_us(current)} delta={delta_pct:.2f}% "
+            f"({delta_us:.2f} {value_unit})"
+        )
+
+
 def _cmd_analyze(args: argparse.Namespace) -> int:
     trace_path = Path(args.trace)
-    records = _extract_records_from_trace(trace_path)
+    payload = _read_trace_payload(trace_path)
+    records = _extract_records_from_payload(payload)
     aggregate = aggregate_records(records)
     _print_aggregate(aggregate)
+    gpu_summary = analyze_gpu_records(
+        records,
+        wall_time_us=float(aggregate.get("wall_time_us", 0.0)),
+        memory_telemetry=(payload.get("summary", {}) or {}).get("gpu", {}).get("memory"),
+    )
+    _print_gpu_diagnostics(gpu_summary)
 
     if not args.baseline:
         return 0
 
-    baseline_records = _extract_records_from_trace(Path(args.baseline))
+    baseline_payload = _read_trace_payload(Path(args.baseline))
+    baseline_records = _extract_records_from_payload(baseline_payload)
     current_means = _op_means(records)
     baseline_means = _op_means(baseline_records)
     regressions, missing, skipped = _regression_report(
@@ -151,31 +279,58 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
         min_baseline_us=args.min_baseline_us,
         min_regression_delta_us=args.min_regression_delta_us,
     )
-
-    print("")
-    print(
-        f"Regression check vs baseline ({args.baseline}) with threshold {args.threshold:.2f}%:"
+    _print_regression_block(
+        label="CPU",
+        baseline_path=args.baseline,
+        threshold=args.threshold,
+        min_baseline_us=args.min_baseline_us,
+        min_regression_delta_us=args.min_regression_delta_us,
+        regressions=regressions,
+        missing=missing,
+        skipped=skipped,
     )
-    print(
-        f"  Filters: min_baseline_us={args.min_baseline_us:.2f}, "
-        f"min_regression_delta_us={args.min_regression_delta_us:.2f}"
-    )
-    if missing:
-        print(f"  Ops missing in baseline: {', '.join(missing[:10])}")
-    if skipped:
-        print(f"  Ops skipped by min_baseline_us: {', '.join(skipped[:10])}")
-    if not regressions:
-        print("  No regressions detected.")
-        return 0
+    has_cpu_regression = bool(regressions)
 
-    print("  Regressions:")
-    for op_name, baseline, current, delta_pct, delta_us in regressions:
-        print(
-            f"    {op_name}: baseline={_format_us(baseline)} "
-            f"current={_format_us(current)} delta={delta_pct:.2f}% "
-            f"({delta_us:.2f} us)"
+    has_gpu_regression = False
+    if args.gpu_ci_mode != "off":
+        current_gpu_means = _op_means(
+            records,
+            metric_key="cuda_elapsed_us",
+            use_cuda_fallback=True,
+            only_cuda=True,
         )
-    return 1
+        baseline_gpu_means = _op_means(
+            baseline_records,
+            metric_key="cuda_elapsed_us",
+            use_cuda_fallback=True,
+            only_cuda=True,
+        )
+        gpu_regressions, gpu_missing, gpu_skipped = _regression_report(
+            current_gpu_means,
+            baseline_gpu_means,
+            args.gpu_threshold,
+            min_baseline_us=args.gpu_min_baseline_us,
+            min_regression_delta_us=args.gpu_min_regression_delta_us,
+        )
+        _print_regression_block(
+            label="GPU",
+            baseline_path=args.baseline,
+            threshold=args.gpu_threshold,
+            min_baseline_us=args.gpu_min_baseline_us,
+            min_regression_delta_us=args.gpu_min_regression_delta_us,
+            regressions=gpu_regressions,
+            missing=gpu_missing,
+            skipped=gpu_skipped,
+        )
+
+        if args.gpu_ci_mode == "require" and not current_gpu_means:
+            print("")
+            print("GPU regression mode is require, but no GPU timing data was found.")
+            has_gpu_regression = True
+        else:
+            has_gpu_regression = bool(gpu_regressions)
+
+    return 1 if (has_cpu_regression or has_gpu_regression) else 0
 
 
 def _dashboard_dist_dir() -> Path:
@@ -335,6 +490,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=300.0,
         help="Peak memory bandwidth used by analyzer heuristics",
     )
+    profile.add_argument(
+        "--timing-mode",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="Timing mode for profiling (auto, cpu, cuda)",
+    )
     profile.add_argument("script_args", nargs=argparse.REMAINDER)
     profile.set_defaults(func=_cmd_profile)
 
@@ -358,6 +519,30 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.0,
         help="Require this minimum absolute delta (microseconds) to flag a regression",
+    )
+    analyze.add_argument(
+        "--gpu-ci-mode",
+        choices=["off", "auto", "require"],
+        default="off",
+        help="GPU regression behavior: off, auto (check if GPU timings exist), require",
+    )
+    analyze.add_argument(
+        "--gpu-threshold",
+        type=float,
+        default=5.0,
+        help="GPU regression threshold percentage for baseline comparison",
+    )
+    analyze.add_argument(
+        "--gpu-min-baseline-us",
+        type=float,
+        default=0.0,
+        help="Ignore GPU ops with baseline mean below this value (microseconds)",
+    )
+    analyze.add_argument(
+        "--gpu-min-regression-delta-us",
+        type=float,
+        default=0.0,
+        help="Require this minimum absolute GPU delta (microseconds) to flag a regression",
     )
     analyze.set_defaults(func=_cmd_analyze)
 

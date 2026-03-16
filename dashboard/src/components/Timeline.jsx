@@ -208,10 +208,14 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
 
       ctx.fillStyle = CHART_COLORS.label;
       ctx.font = '600 12px Sora, sans-serif';
-      ctx.fillText(`Thread ${lane.tid}`, 14, y + 16);
+      ctx.fillText(lane.label || `Thread ${lane.tid}`, 14, y + 16);
       ctx.font = '11px IBM Plex Mono, monospace';
       ctx.fillStyle = CHART_COLORS.subLabel;
-      ctx.fillText(`${lane.eventCount} events`, 14, y + 31);
+      const laneMeta =
+        lane.type === 'gpu'
+          ? `${lane.eventCount} events • GPU stream lane`
+          : `${lane.eventCount} events • CPU thread lane`;
+      ctx.fillText(laneMeta, 14, y + 31);
 
       lane.events.forEach((event) => {
         const x = LEFT_GUTTER + (event.ts - parsed.bounds.startUs) * zoom;
@@ -295,7 +299,9 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
         <div className="timeline-meta">
           <span>Range: {formatMicroseconds(parsed.bounds.rangeUs)}</span>
           <span>Ops: {parsed.stats.totalOps}</span>
-          <span>Lanes: {parsed.lanes.length}</span>
+          <span>CPU Lanes: {parsed.stats.cpuLaneCount}</span>
+          <span>GPU Lanes: {parsed.stats.gpuLaneCount}</span>
+          <span>CUDA Ops: {parsed.stats.gpu?.cuda_ops ?? 0}</span>
           <span>Tip: Ctrl/Cmd + wheel to zoom</span>
         </div>
       </div>
@@ -314,6 +320,7 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
         <span>
           <i className="legend-swatch unknown" /> Unknown
         </span>
+        <span>Lane labels show CPU threads and GPU streams.</span>
       </div>
     </div>
   );
