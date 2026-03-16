@@ -9,22 +9,22 @@ const BOTTOM_PADDING = 24;
 const RIGHT_PADDING = 40;
 
 const EVENT_COLORS = {
-  'compute-bound': '#2fdb93',
-  'memory-bound': '#ff6f61',
-  unknown: '#8e9db4'
+  'compute-bound': '#10d9a0',
+  'memory-bound': '#fb923c',
+  unknown: '#2d3f56'
 };
 
 const CHART_COLORS = {
-  background: '#0f1525',
-  frame: '#131b2e',
-  laneA: '#17233b',
-  laneB: '#142036',
-  axisText: '#91a2bc',
-  grid: '#22324e',
-  label: '#d8e3f3',
-  subLabel: '#91a2bc',
-  selectedStroke: '#f8fafc',
-  eventLabel: '#e9f1ff'
+  background: '#050810',
+  frame: '#0a0f1a',
+  laneA: '#0d1420',
+  laneB: '#0b121c',
+  axisText: '#3d5470',
+  grid: '#141e2e',
+  label: '#c4d4e8',
+  subLabel: '#3d5470',
+  selectedStroke: '#6366f1',
+  eventLabel: '#8fa8c4'
 };
 
 function clamp(value, min, max) {
