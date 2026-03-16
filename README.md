@@ -2,13 +2,15 @@
 
 Flux is a local-first ML profiler that captures low-level PyTorch operation timing, exports Chrome Trace JSON, and provides a timeline dashboard for debugging performance bottlenecks.
 
-## Project Status
+## Dashboard Screenshots
 
-- Active development
-- CPU profiling path is implemented and usable today
-- CUDA timing mode is implemented with CPU fallback on non-CUDA environments
-- GPU diagnostics summary and memory telemetry are implemented
-- Dashboard + CI regression checks are implemented, including optional GPU regression gate
+Overview:
+
+![Flux Dashboard Overview](docs/images/dashboard-overview.png)
+
+Timeline + inspector:
+
+![Flux Dashboard Timeline](docs/images/dashboard-timeline.png)
 
 ## Why Flux
 
@@ -97,16 +99,6 @@ flux serve --trace trace.json --port 8080
 ```
 
 Open `http://127.0.0.1:8080`.
-
-## Dashboard Screenshots
-
-Overview:
-
-![Flux Dashboard Overview](docs/images/dashboard-overview.png)
-
-Timeline + inspector:
-
-![Flux Dashboard Timeline](docs/images/dashboard-timeline.png)
 
 ## CLI Reference
 
