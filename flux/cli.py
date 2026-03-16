@@ -359,6 +359,15 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
 
 
 def _dashboard_dist_dir() -> Path:
+    # First, check if there's a dashboard build in the current working directory.
+    # This ensures developers running `flux serve` from the repository root always
+    # get their local build, even if flux is installed globally.
+    cwd_dist = Path.cwd() / "dashboard" / "dist"
+    if cwd_dist.exists():
+        return cwd_dist
+
+    # Fallback: check relative to the currently executed cli.py file.
+    # This works for `pip install -e .` (editable installs).
     project_root = Path(__file__).resolve().parent.parent
     return project_root / "dashboard" / "dist"
 
