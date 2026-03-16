@@ -9,9 +9,22 @@ const BOTTOM_PADDING = 24;
 const RIGHT_PADDING = 40;
 
 const EVENT_COLORS = {
-  'compute-bound': '#1aa56d',
-  'memory-bound': '#e35343',
-  unknown: '#8795a7'
+  'compute-bound': '#2fdb93',
+  'memory-bound': '#ff6f61',
+  unknown: '#8e9db4'
+};
+
+const CHART_COLORS = {
+  background: '#0f1525',
+  frame: '#131b2e',
+  laneA: '#17233b',
+  laneB: '#142036',
+  axisText: '#91a2bc',
+  grid: '#22324e',
+  label: '#d8e3f3',
+  subLabel: '#91a2bc',
+  selectedStroke: '#f8fafc',
+  eventLabel: '#e9f1ff'
 };
 
 function clamp(value, min, max) {
@@ -44,6 +57,7 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
 
   const [viewportWidth, setViewportWidth] = useState(900);
   const [zoom, setZoom] = useState(0.12);
+  const [hasUserZoomed, setHasUserZoomed] = useState(false);
 
   useEffect(() => {
     const target = scrollRef.current;
@@ -64,6 +78,7 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = 0;
     }
+    setHasUserZoomed(false);
   }, [parsed?.bounds?.startUs]);
 
   const laneCount = parsed?.lanes?.length ?? 0;
@@ -78,14 +93,17 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
     return Math.max(viewportWidth, chartWidth);
   }, [rangeUs, viewportWidth, zoom]);
 
-  function applyZoom(nextZoom, anchorPx = null) {
+  function applyZoom(nextZoom, anchorPx = null, fromUser = true) {
     const scroller = scrollRef.current;
+    const bounded = clamp(nextZoom, 0.01, 1.2);
+    if (fromUser) {
+      setHasUserZoomed(true);
+    }
     if (!scroller) {
-      setZoom(clamp(nextZoom, 0.01, 1.2));
+      setZoom(bounded);
       return;
     }
 
-    const bounded = clamp(nextZoom, 0.01, 1.2);
     const oldZoom = zoom;
     const anchor =
       anchorPx ?? scroller.scrollLeft + scroller.clientWidth / 2 - LEFT_GUTTER;
@@ -98,6 +116,26 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
       scroller.scrollLeft = Math.max(0, nextScroll);
     });
   }
+
+  function fitToScreen(fromUser = true) {
+    if (!parsed || parsed.events.length === 0 || rangeUs <= 0) {
+      return;
+    }
+    const innerWidth = Math.max(200, viewportWidth - LEFT_GUTTER - RIGHT_PADDING);
+    const fitZoom = innerWidth / rangeUs;
+    applyZoom(fitZoom, 0, fromUser);
+    const scroller = scrollRef.current;
+    if (scroller) {
+      scroller.scrollLeft = 0;
+    }
+  }
+
+  useEffect(() => {
+    if (!parsed || parsed.events.length === 0 || hasUserZoomed) {
+      return;
+    }
+    fitToScreen(false);
+  }, [parsed?.bounds?.startUs, rangeUs, viewportWidth, hasUserZoomed]);
 
   useEffect(() => {
     const scroller = scrollRef.current;
@@ -138,17 +176,17 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
     ctx.scale(dpr, dpr);
 
     // Canvas background and chart frame.
-    ctx.fillStyle = '#f7fafc';
+    ctx.fillStyle = CHART_COLORS.background;
     ctx.fillRect(0, 0, totalWidth, totalHeight);
-    ctx.fillStyle = '#eef3f8';
+    ctx.fillStyle = CHART_COLORS.frame;
     ctx.fillRect(LEFT_GUTTER, TOP_AXIS, totalWidth - LEFT_GUTTER, totalHeight - TOP_AXIS);
 
     // Top axis with readable tick spacing across large/small ranges.
     const chartWidth = totalWidth - LEFT_GUTTER - RIGHT_PADDING;
     const tickStepUs = niceTickStep((chartWidth / 8) / zoom);
     ctx.font = '12px IBM Plex Mono, monospace';
-    ctx.fillStyle = '#5d6d83';
-    ctx.strokeStyle = '#d6e1ec';
+    ctx.fillStyle = CHART_COLORS.axisText;
+    ctx.strokeStyle = CHART_COLORS.grid;
     ctx.lineWidth = 1;
 
     for (let tickUs = 0; tickUs <= rangeUs; tickUs += tickStepUs) {
@@ -165,14 +203,14 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
     parsed.lanes.forEach((lane, laneIndex) => {
       const y = TOP_AXIS + laneIndex * (LANE_HEIGHT + LANE_GAP);
 
-      ctx.fillStyle = laneIndex % 2 === 0 ? '#f2f6fb' : '#edf2f7';
+      ctx.fillStyle = laneIndex % 2 === 0 ? CHART_COLORS.laneA : CHART_COLORS.laneB;
       ctx.fillRect(LEFT_GUTTER, y, totalWidth - LEFT_GUTTER, LANE_HEIGHT);
 
-      ctx.fillStyle = '#1f2e45';
-      ctx.font = '600 12px Space Grotesk, sans-serif';
+      ctx.fillStyle = CHART_COLORS.label;
+      ctx.font = '600 12px Sora, sans-serif';
       ctx.fillText(`Thread ${lane.tid}`, 14, y + 16);
       ctx.font = '11px IBM Plex Mono, monospace';
-      ctx.fillStyle = '#617188';
+      ctx.fillStyle = CHART_COLORS.subLabel;
       ctx.fillText(`${lane.eventCount} events`, 14, y + 31);
 
       lane.events.forEach((event) => {
@@ -185,13 +223,13 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
 
         if (selectedEvent?.id === event.id) {
           ctx.lineWidth = 2;
-          ctx.strokeStyle = '#111827';
+          ctx.strokeStyle = CHART_COLORS.selectedStroke;
           ctx.strokeRect(x, y + 6, width, LANE_HEIGHT - 12);
         }
 
         if (width > 68) {
           ctx.font = '11px IBM Plex Mono, monospace';
-          ctx.fillStyle = '#f8fafc';
+          ctx.fillStyle = CHART_COLORS.eventLabel;
           ctx.fillText(event.name.replace('aten::', ''), x + 6, y + 24);
         }
 
@@ -250,11 +288,15 @@ export default function Timeline({ parsed, selectedEvent, onSelect }) {
           <button type="button" className="btn btn-ghost" onClick={() => applyZoom(zoom * 1.25)}>
             +
           </button>
+          <button type="button" className="btn btn-ghost" onClick={() => fitToScreen(true)}>
+            Fit
+          </button>
         </div>
         <div className="timeline-meta">
           <span>Range: {formatMicroseconds(parsed.bounds.rangeUs)}</span>
           <span>Ops: {parsed.stats.totalOps}</span>
           <span>Lanes: {parsed.lanes.length}</span>
+          <span>Tip: Ctrl/Cmd + wheel to zoom</span>
         </div>
       </div>
 

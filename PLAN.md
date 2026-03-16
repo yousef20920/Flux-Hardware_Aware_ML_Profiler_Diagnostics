@@ -2,7 +2,7 @@
 
 ## Context
 
-Flux is a green-field, hardware-aware ML profiler and diagnostics tool. Only a README exists — no source code. The goal is to build the complete MVP across all 4 phases: C++ profiling hooks, Python aggregation layer, React dashboard, and CI/CD automation.
+Flux is a hardware-aware ML profiler and diagnostics tool. The goal is to build and extend the MVP across 6 phases: C++ profiling hooks, Python aggregation layer, React dashboard, CI/CD automation, CUDA timing integration, and GPU hardware metrics.
 
 ## Directory Structure
 
@@ -13,11 +13,13 @@ flux/                          # Python package
   aggregator.py                # Group/summarize timing records
   analyzer.py                  # Memory-bound vs compute-bound classification
   trace_exporter.py            # Chrome Trace Event JSON export
+  gpu_analyzer.py              # GPU-specific utilization and memory analysis
   cli.py                       # CLI entry point (profile, analyze, serve)
 
 csrc/                          # C++ extension
   flux_hooks.h
   flux_hooks.cpp               # ATen dispatcher hooks + pybind11 bindings
+  flux_cuda_hooks.cpp          # CUDA event timing + stream metadata
 
 dashboard/                     # React timeline viewer
   package.json
@@ -99,6 +101,31 @@ requirements.txt
 3. Jenkinsfile with Build → Profile → Regression Check → Archive stages
 4. Regression detection logic in `flux analyze --baseline --threshold`: compare per-op mean durations, exit non-zero if threshold exceeded
 
+## Phase 5: CUDA Timing Integration
+
+**Files:** `csrc/flux_cuda_hooks.cpp`, `csrc/flux_hooks.cpp`, `csrc/flux_hooks.h`, `flux/profiler.py`, `flux/trace_exporter.py`, `flux/cli.py`
+
+1. Add optional CUDA timing path using CUDA events (`cudaEventRecord`) for GPU ops
+2. Capture both host duration (`std::chrono`) and device duration (`cuda_elapsed_us`) when CUDA is available
+3. Capture per-event GPU metadata: `device_id`, `stream_id`, and `is_cuda`
+4. Extend pybind payload and Python records to include the new GPU timing fields
+5. Add CLI timing selection:
+   - `--timing-mode auto|cpu|cuda` (default `auto`)
+6. Keep CPU fallback behavior unchanged on non-CUDA environments
+
+## Phase 6: GPU Diagnostics and CI Gate
+
+**Files:** `flux/gpu_analyzer.py`, `flux/analyzer.py`, `flux/trace_exporter.py`, `flux/cli.py`, `dashboard/src/utils/parseTrace.js`, `dashboard/src/components/SummaryPanel.jsx`, `dashboard/src/components/Timeline.jsx`, `.github/workflows/perf-regression.yml`, `ci/Jenkinsfile`
+
+1. Add GPU memory telemetry (allocated/reserved/peak bytes) to profiling outputs
+2. Add GPU diagnostics summary:
+   - SM utilization estimate
+   - memory bandwidth pressure estimate
+   - host-to-device transfer pressure
+3. Render GPU metrics and lanes in the dashboard (summary cards + timeline metadata)
+4. Extend `flux analyze` output with GPU-specific regression deltas
+5. Add optional GPU CI mode that compares `cuda_elapsed_us` against baseline and fails when threshold is exceeded
+
 ## Implementation Order
 
 | Step | What | Depends On |
@@ -110,7 +137,9 @@ requirements.txt
 | 5 | Dashboard: `dashboard/` (can partially overlap with Steps 3-4) | — |
 | 6 | Wire `flux serve` to dashboard | Steps 4, 5 |
 | 7 | CI/CD: Dockerfile, Jenkinsfile, GitHub Actions | Steps 4, 5 |
-| 8 | Tests | Steps 2-4 |
+| 8 | Tests for CPU pipeline | Steps 2-4 |
+| 9 | CUDA timing integration | Steps 2-4 |
+| 10 | GPU diagnostics + dashboard GPU panels + CI GPU gate | Steps 5, 7, 9 |
 
 ## Verification
 
@@ -118,4 +147,6 @@ requirements.txt
 2. **Phase 2:** `python examples/profile_simple_model.py` produces a valid `trace.json`, `flux analyze --trace trace.json` prints summary
 3. **Phase 3:** `flux serve --trace trace.json` opens browser with interactive timeline
 4. **Phase 4:** `docker build -f ci/Dockerfile .` succeeds, GitHub Actions workflow syntax is valid (`actionlint`)
-5. **All tests pass:** `pytest tests/`
+5. **Phase 5:** On a CUDA machine, `flux profile --timing-mode cuda --script examples/profile_simple_model.py --output trace-gpu.json` includes `cuda_elapsed_us`, `device_id`, and `stream_id`
+6. **Phase 6:** `flux analyze --trace trace-gpu.json --baseline ci/baseline/trace-baseline.json --threshold 5` reports GPU diagnostics and enforces GPU regression checks
+7. **All tests pass:** `pytest tests/`

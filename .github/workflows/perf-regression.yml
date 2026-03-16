@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       THRESHOLD: "5"
+      BASELINE_MODE: ephemeral
       CURRENT_TRACE: trace-current.json
       BASELINE_TRACE: trace-baseline.json
 
@@ -48,10 +49,11 @@ jobs:
 
       - name: Prepare baseline
         run: |
-          if [ -f ci/baseline/trace-baseline.json ]; then
+          if [ "$BASELINE_MODE" = "checked-in" ] && [ -f ci/baseline/trace-baseline.json ]; then
+            echo "Using checked-in baseline trace."
             cp ci/baseline/trace-baseline.json "$BASELINE_TRACE"
           else
-            echo "No checked-in baseline found; generating baseline in this run."
+            echo "Generating baseline in this run (mode: $BASELINE_MODE)."
             flux profile --script examples/profile_simple_model.py --output "$BASELINE_TRACE"
           fi
 

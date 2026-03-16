@@ -1,0 +1,2368 @@
+{
+  "traceEvents": [
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 4925,
+      "dur": 319,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 319,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 4958,
+      "dur": 285,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 285,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5259,
+      "dur": 56,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 56,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5320,
+      "dur": 170,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 170,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5323,
+      "dur": 167,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 167,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5494,
+      "dur": 4,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 4,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5535,
+      "dur": 167,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 167,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5538,
+      "dur": 165,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 165,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5705,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5725,
+      "dur": 110,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 110,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5727,
+      "dur": 109,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 109,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5838,
+      "dur": 4,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 4,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5863,
+      "dur": 130,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 130,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5864,
+      "dur": 129,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 129,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 5995,
+      "dur": 18,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 18,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6016,
+      "dur": 103,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 103,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6018,
+      "dur": 101,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 101,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6121,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6141,
+      "dur": 128,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 128,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6142,
+      "dur": 126,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 126,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6271,
+      "dur": 18,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 18,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6291,
+      "dur": 102,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 102,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6292,
+      "dur": 101,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 101,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6395,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6413,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6415,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6536,
+      "dur": 18,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 18,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6556,
+      "dur": 99,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 99,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6558,
+      "dur": 97,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 97,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6657,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6678,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6679,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6801,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6822,
+      "dur": 98,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 98,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6823,
+      "dur": 96,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 96,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6921,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6940,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 6941,
+      "dur": 120,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 120,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7063,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7083,
+      "dur": 94,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 94,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7084,
+      "dur": 93,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 93,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7180,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7197,
+      "dur": 124,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 124,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7199,
+      "dur": 122,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 122,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7323,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7343,
+      "dur": 94,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 94,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7344,
+      "dur": 92,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 92,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7438,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7456,
+      "dur": 123,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 123,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7457,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7581,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7601,
+      "dur": 107,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 107,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7602,
+      "dur": 106,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 106,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7710,
+      "dur": 2,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 2,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7726,
+      "dur": 123,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 123,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7727,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7851,
+      "dur": 16,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 16,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7870,
+      "dur": 96,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 96,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7871,
+      "dur": 94,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 94,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7968,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7985,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 7986,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8108,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8127,
+      "dur": 97,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 97,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8129,
+      "dur": 96,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 96,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8227,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8245,
+      "dur": 131,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 131,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8246,
+      "dur": 130,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 130,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8378,
+      "dur": 19,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 19,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8400,
+      "dur": 96,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 96,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8401,
+      "dur": 95,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 95,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8499,
+      "dur": 2,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 2,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8516,
+      "dur": 122,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 122,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8517,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8640,
+      "dur": 18,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 18,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8661,
+      "dur": 92,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 92,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8662,
+      "dur": 91,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 91,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8754,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8772,
+      "dur": 120,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 120,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8773,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8894,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8913,
+      "dur": 88,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 88,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 8915,
+      "dur": 87,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 87,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9003,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9021,
+      "dur": 123,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 123,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9022,
+      "dur": 122,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 122,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9146,
+      "dur": 20,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 20,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9169,
+      "dur": 94,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 94,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9170,
+      "dur": 93,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 93,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9265,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9282,
+      "dur": 123,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 123,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9283,
+      "dur": 121,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 121,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9407,
+      "dur": 14,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 14,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9423,
+      "dur": 88,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 88,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9425,
+      "dur": 86,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 86,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9513,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9533,
+      "dur": 120,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 120,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9534,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9655,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9675,
+      "dur": 103,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 103,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9676,
+      "dur": 102,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 102,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9780,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9798,
+      "dur": 120,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 120,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9799,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9920,
+      "dur": 14,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 14,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9937,
+      "dur": 93,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 93,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 9938,
+      "dur": 92,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 92,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10032,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10049,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10050,
+      "dur": 118,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 118,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10170,
+      "dur": 14,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 14,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10187,
+      "dur": 90,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 90,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10188,
+      "dur": 89,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 89,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10279,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10296,
+      "dur": 119,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 119,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10297,
+      "dur": 118,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 118,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10417,
+      "dur": 17,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 17,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::linear",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10437,
+      "dur": 87,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::linear",
+        "duration_us": 87,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::addmm",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10438,
+      "dur": 86,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::addmm",
+        "duration_us": 86,
+        "classification": "compute-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    },
+    {
+      "name": "aten::relu",
+      "cat": "ml-op",
+      "ph": "X",
+      "ts": 10526,
+      "dur": 3,
+      "pid": 1,
+      "tid": 1,
+      "args": {
+        "op_name": "aten::relu",
+        "duration_us": 3,
+        "classification": "memory-bound",
+        "classification_reason": "op-heuristic",
+        "bottleneck_ratio": 1.0
+      }
+    }
+  ],
+  "summary": {
+    "total_ops": 120,
+    "total_duration_us": 9740,
+    "wall_time_us": 5604,
+    "idle_time_us": 428,
+    "utilization_pct": 92.36,
+    "ops": [
+      {
+        "op_name": "aten::linear",
+        "count": 40,
+        "total_us": 4696,
+        "mean_us": 117.4,
+        "min_us": 87,
+        "max_us": 319,
+        "pct_total_duration": 48.21
+      },
+      {
+        "op_name": "aten::addmm",
+        "count": 40,
+        "total_us": 4606,
+        "mean_us": 115.15,
+        "min_us": 86,
+        "max_us": 285,
+        "pct_total_duration": 47.29
+      },
+      {
+        "op_name": "aten::relu",
+        "count": 40,
+        "total_us": 438,
+        "mean_us": 10.95,
+        "min_us": 2,
+        "max_us": 56,
+        "pct_total_duration": 4.5
+      }
+    ],
+    "idle_gaps": [
+      {
+        "start_us": 5245,
+        "end_us": 5259,
+        "duration_us": 14
+      },
+      {
+        "start_us": 5315,
+        "end_us": 5320,
+        "duration_us": 5
+      },
+      {
+        "start_us": 5490,
+        "end_us": 5494,
+        "duration_us": 4
+      },
+      {
+        "start_us": 5499,
+        "end_us": 5535,
+        "duration_us": 36
+      },
+      {
+        "start_us": 5703,
+        "end_us": 5705,
+        "duration_us": 2
+      },
+      {
+        "start_us": 5723,
+        "end_us": 5725,
+        "duration_us": 2
+      },
+      {
+        "start_us": 5836,
+        "end_us": 5838,
+        "duration_us": 2
+      },
+      {
+        "start_us": 5842,
+        "end_us": 5863,
+        "duration_us": 21
+      },
+      {
+        "start_us": 5994,
+        "end_us": 5995,
+        "duration_us": 1
+      },
+      {
+        "start_us": 6014,
+        "end_us": 6016,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6119,
+        "end_us": 6121,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6125,
+        "end_us": 6141,
+        "duration_us": 16
+      },
+      {
+        "start_us": 6269,
+        "end_us": 6271,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6289,
+        "end_us": 6291,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6393,
+        "end_us": 6395,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6398,
+        "end_us": 6413,
+        "duration_us": 15
+      },
+      {
+        "start_us": 6535,
+        "end_us": 6536,
+        "duration_us": 1
+      },
+      {
+        "start_us": 6554,
+        "end_us": 6556,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6655,
+        "end_us": 6657,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6661,
+        "end_us": 6678,
+        "duration_us": 17
+      },
+      {
+        "start_us": 6799,
+        "end_us": 6801,
+        "duration_us": 2
+      },
+      {
+        "start_us": 6819,
+        "end_us": 6822,
+        "duration_us": 3
+      },
+      {
+        "start_us": 6920,
+        "end_us": 6921,
+        "duration_us": 1
+      },
+      {
+        "start_us": 6925,
+        "end_us": 6940,
+        "duration_us": 15
+      },
+      {
+        "start_us": 7062,
+        "end_us": 7063,
+        "duration_us": 1
+      },
+      {
+        "start_us": 7081,
+        "end_us": 7083,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7178,
+        "end_us": 7180,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7183,
+        "end_us": 7197,
+        "duration_us": 14
+      },
+      {
+        "start_us": 7322,
+        "end_us": 7323,
+        "duration_us": 1
+      },
+      {
+        "start_us": 7341,
+        "end_us": 7343,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7437,
+        "end_us": 7438,
+        "duration_us": 1
+      },
+      {
+        "start_us": 7442,
+        "end_us": 7456,
+        "duration_us": 14
+      },
+      {
+        "start_us": 7579,
+        "end_us": 7581,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7599,
+        "end_us": 7601,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7708,
+        "end_us": 7710,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7712,
+        "end_us": 7726,
+        "duration_us": 14
+      },
+      {
+        "start_us": 7850,
+        "end_us": 7851,
+        "duration_us": 1
+      },
+      {
+        "start_us": 7868,
+        "end_us": 7870,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7966,
+        "end_us": 7968,
+        "duration_us": 2
+      },
+      {
+        "start_us": 7971,
+        "end_us": 7985,
+        "duration_us": 14
+      },
+      {
+        "start_us": 8106,
+        "end_us": 8108,
+        "duration_us": 2
+      },
+      {
+        "start_us": 8125,
+        "end_us": 8127,
+        "duration_us": 2
+      },
+      {
+        "start_us": 8225,
+        "end_us": 8227,
+        "duration_us": 2
+      },
+      {
+        "start_us": 8230,
+        "end_us": 8245,
+        "duration_us": 15
+      },
+      {
+        "start_us": 8377,
+        "end_us": 8378,
+        "duration_us": 1
+      },
+      {
+        "start_us": 8398,
+        "end_us": 8400,
+        "duration_us": 2
+      },
+      {
+        "start_us": 8497,
+        "end_us": 8499,
+        "duration_us": 2
+      },
+      {
+        "start_us": 8501,
+        "end_us": 8516,
+        "duration_us": 15
+      },
+      {
+        "start_us": 8639,
+        "end_us": 8640,
+        "duration_us": 1
+      },
+      {
+        "start_us": 8658,
+        "end_us": 8661,
+        "duration_us": 3
+      },
+      {
+        "start_us": 8753,
+        "end_us": 8754,
+        "duration_us": 1
+      },
+      {
+        "start_us": 8758,
+        "end_us": 8772,
+        "duration_us": 14
+      },
+      {
+        "start_us": 8892,
+        "end_us": 8894,
+        "duration_us": 2
+      },
+      {
+        "start_us": 8911,
+        "end_us": 8913,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9002,
+        "end_us": 9003,
+        "duration_us": 1
+      },
+      {
+        "start_us": 9007,
+        "end_us": 9021,
+        "duration_us": 14
+      },
+      {
+        "start_us": 9144,
+        "end_us": 9146,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9167,
+        "end_us": 9169,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9263,
+        "end_us": 9265,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9268,
+        "end_us": 9282,
+        "duration_us": 14
+      },
+      {
+        "start_us": 9405,
+        "end_us": 9407,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9421,
+        "end_us": 9423,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9512,
+        "end_us": 9513,
+        "duration_us": 1
+      },
+      {
+        "start_us": 9516,
+        "end_us": 9533,
+        "duration_us": 17
+      },
+      {
+        "start_us": 9654,
+        "end_us": 9655,
+        "duration_us": 1
+      },
+      {
+        "start_us": 9673,
+        "end_us": 9675,
+        "duration_us": 2
+      },
+      {
+        "start_us": 9779,
+        "end_us": 9780,
+        "duration_us": 1
+      },
+      {
+        "start_us": 9784,
+        "end_us": 9798,
+        "duration_us": 14
+      },
+      {
+        "start_us": 9919,
+        "end_us": 9920,
+        "duration_us": 1
+      },
+      {
+        "start_us": 9935,
+        "end_us": 9937,
+        "duration_us": 2
+      },
+      {
+        "start_us": 10030,
+        "end_us": 10032,
+        "duration_us": 2
+      },
+      {
+        "start_us": 10035,
+        "end_us": 10049,
+        "duration_us": 14
+      },
+      {
+        "start_us": 10169,
+        "end_us": 10170,
+        "duration_us": 1
+      },
+      {
+        "start_us": 10185,
+        "end_us": 10187,
+        "duration_us": 2
+      },
+      {
+        "start_us": 10277,
+        "end_us": 10279,
+        "duration_us": 2
+      },
+      {
+        "start_us": 10282,
+        "end_us": 10296,
+        "duration_us": 14
+      },
+      {
+        "start_us": 10416,
+        "end_us": 10417,
+        "duration_us": 1
+      },
+      {
+        "start_us": 10435,
+        "end_us": 10437,
+        "duration_us": 2
+      },
+      {
+        "start_us": 10525,
+        "end_us": 10526,
+        "duration_us": 1
+      }
+    ],
+    "classification": {
+      "total_ops": 120,
+      "counts": {
+        "compute-bound": 80,
+        "memory-bound": 40
+      },
+      "percentages": {
+        "compute-bound": 66.67,
+        "memory-bound": 33.33
+      }
+    }
+  }
+}

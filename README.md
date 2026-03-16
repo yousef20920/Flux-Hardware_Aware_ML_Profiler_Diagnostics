@@ -176,3 +176,10 @@ flux profile --script examples/profile_simple_model.py --output trace-current.js
 flux profile --script examples/profile_simple_model.py --output trace-baseline.json
 flux analyze --trace trace-current.json --baseline trace-baseline.json --threshold 5
 ```
+
+```bash
+# CI baseline mode:
+# - ephemeral (default): generate baseline in the same run
+# - checked-in: use ci/baseline/trace-baseline.json
+BASELINE_MODE=checked-in flux analyze --trace trace-current.json --baseline ci/baseline/trace-baseline.json --threshold 5
+```

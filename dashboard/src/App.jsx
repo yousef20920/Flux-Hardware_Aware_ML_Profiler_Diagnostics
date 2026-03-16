@@ -56,24 +56,35 @@ export default function App() {
     return `${parsed.stats.totalOps} ops loaded`;
   }, [parsed]);
 
+  const selectedLabel = useMemo(() => {
+    if (!selectedEvent) {
+      return 'No event selected';
+    }
+    return `${selectedEvent.name} • ${selectedEvent.classification}`;
+  }, [selectedEvent]);
+
   return (
     <div className="app-shell">
-      <header className="hero reveal">
-        <div>
+      <header className="header reveal">
+        <div className="header-title">
           <p className="eyebrow">Flux Local Dashboard</p>
-          <h1>Hardware-Aware ML Timeline Explorer</h1>
-          <p className="hero-subtitle">
-            Inspect execution overlap, identify memory pressure, and trace bottlenecks per thread.
+          <h1>Hardware-Aware ML Timeline</h1>
+          <p className="header-subtitle">
+            Inspect execution overlap, identify memory pressure, and trace bottlenecks.
           </p>
         </div>
-        <div className="hero-meta">
-          <div>
+        <div className="header-meta">
+          <div className="meta-card">
             <span className="meta-label">Source</span>
             <span className="meta-value mono">{sourceLabel}</span>
           </div>
-          <div>
+          <div className="meta-card">
             <span className="meta-label">Status</span>
             <span className="meta-value">{statusLabel}</span>
+          </div>
+          <div className="meta-card">
+            <span className="meta-label">Selection</span>
+            <span className="meta-value mono">{selectedLabel}</span>
           </div>
         </div>
       </header>
@@ -83,11 +94,15 @@ export default function App() {
       <main className="layout-grid">
         <section className="panel reveal delay-1">
           <h2>Trace Input</h2>
+          <p className="section-subtitle">Import a trace file or fetch the trace served from this machine.</p>
           <TraceLoader onLoad={handleLoad} onError={setError} />
         </section>
 
         <section className="panel panel-wide reveal delay-2">
           <h2>Execution Timeline</h2>
+          <p className="section-subtitle">
+            Zoom and pan across threads to pinpoint idle gaps and long-running operations.
+          </p>
           <Timeline parsed={parsed} selectedEvent={selectedEvent} onSelect={setSelectedEvent} />
         </section>
 
